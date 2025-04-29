@@ -118,7 +118,7 @@ services:
     working_dir: /app
     command: mvn spring-boot:run
     environment:
-      - STRIPE_API_KEY=sk_test_51REplzQqMHKH1gNhDDKh9RFT8xE9NePO8cvV2TarffMp2WugVFWmSjNYj9U5qZbnJaxDi7zzFYoarToh3WSiBNit00sVwb7ZRs
+      - STRIPE_API_KEY=${STRIPE_API_KEY}
     depends_on:
       - eureka-server
     networks:
