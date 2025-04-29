@@ -8,6 +8,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="seat" />
         <module name="notification" />
+        <module name="payment-service" />
         <module name="showtime-service" />
         <module name="booking-service" />
         <module name="api-gateway" />
@@ -15,6 +16,7 @@
         <module name="payment" />
         <module name="user-service" />
         <module name="eureka-server" />
+        <module name="notification-service" />
       </profile>
     </annotationProcessing>
   </component>
@@ -25,7 +27,9 @@
       <module name="eureka-server" options="-parameters" />
       <module name="movie-service" options="-parameters" />
       <module name="notification" options="-parameters" />
+      <module name="notification-service" options="-parameters" />
       <module name="payment" options="-parameters" />
+      <module name="payment-service" options="-parameters" />
       <module name="seat" options="-parameters" />
       <module name="showtime-service" options="-parameters" />
       <module name="user-service" options="-parameters" />
