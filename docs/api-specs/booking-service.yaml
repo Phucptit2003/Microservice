@@ -1,0 +1,140 @@
+openapi: 3.0.3
+info:
+  title: Booking Service API
+  description: API for managing movie ticket bookings in the movie_ticket_booking system.
+  version: 0.0.1
+servers:
+  - url: http://localhost:8080/api/booking
+    description: Booking Service endpoint
+paths:
+  /book:
+    post:
+      summary: Create a new booking
+      description: Initiates a booking by locking seats, processing payment, and sending a notification.
+      operationId: createBooking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingRequest'
+      responses:
+        '201':
+          description: Booking created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Showtime or seats not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+  /confirm:
+    post:
+      summary: Confirm a booking
+      description: Confirms a booking after payment is processed.
+      operationId: confirmBooking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmRequest'
+      responses:
+        '200':
+          description: Booking confirmed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+components:
+  schemas:
+    BookingRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+          example: "user123"
+        showtimeId:
+          type: string
+          example: "showtime456"
+        seatIds:
+          type: array
+          items:
+            type: string
+          example: ["seat1", "seat2"]
+      required:
+        - userId
+        - showtimeId
+        - seatIds
+    BookingResponse:
+      type: object
+      properties:
+        bookingId:
+          type: string
+          example: "booking789"
+        status:
+          type: string
+          example: "CONFIRMED"
+        totalAmount:
+          type: number
+          format: double
+          example: 20.00
+      required:
+        - bookingId
+        - status
+    ConfirmRequest:
+      type: object
+      properties:
+        bookingId:
+          type: string
+          example: "booking789"
+        paymentId:
+          type: string
+          example: "payment123"
+      required:
+        - bookingId
+        - paymentId
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Booking confirmed successfully"
+      required:
+        - message
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Showtime not found"
+        status:
+          type: integer
+          example: 404
+      required:
+        - message
+        - status
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

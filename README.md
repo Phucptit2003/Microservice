@@ -1,103 +1,86 @@
-# 🧩 Microservices Assignment Starter Template
+# Movie Ticket Booking System
 
-This repository is a **starter template** for building a microservices-based system. Use it as a base for your group assignment.
+## Overview
+The `movie_ticket_booking` system is a microservice-based application for online movie ticket booking. It allows users to browse movies, select showtimes, book seats, make payments, and receive notifications. The system is built using **Spring Boot**, **Docker**, and **Spring Cloud**, with **Eureka Server** for service discovery and **API Gateway** for request routing. Security is enforced using **JWT**.
 
----
+## Features
+- User registration and authentication.
+- Browse movies and showtimes by cinema.
+- Select and book seats for a showtime.
+- Process payments securely.
+- Send booking confirmation notifications.
+- Admin functionality to manage movies and showtimes.
 
-## 📁 Folder Structure
+## Architecture
+The system follows a microservice architecture, with the following components:
+- **API Gateway**: Routes requests and handles JWT authentication.
+- **Eureka Server**: Manages service discovery.
+- **Microservices**:
+  - `user-service`: User authentication and profile management.
+  - `movie-service`: Movie information and administration.
+  - `showtime-service`: Showtime and cinema management.
+  - `seat`: Seat selection and locking.
+  - `booking-service`: Booking orchestration.
+  - `payment-service`: Payment processing.
+  - `notification-service`: Notification delivery.
+- **Databases**: Each service uses its own database (assumed PostgreSQL).
+- **Communication**: REST APIs with Feign Client for synchronous interactions.
 
-```
-microservices-assignment-starter/
-├── README.md                       # This instruction file
-├── .env.example                    # Example environment variables
-├── docker-compose.yml              # Multi-container setup for all services
-├── docs/                           # Documentation folder
-│   ├── architecture.md             # Describe your system design here
-│   ├── analysis-and-design.md      # Document system analysis and design details
-│   ├── asset/                      # Store images, diagrams, or other visual assets for documentation
-│   └── api-specs/                  # API specifications in OpenAPI (YAML)
-│       ├── service-a.yaml
-│       └── service-b.yaml
-├── scripts/                        # Utility or deployment scripts
-│   └── init.sh
-├── services/                       # Application microservices
-│   ├── service-a/
-│   │   ├── Dockerfile
-│   │   └── src/
-│   │   └── readme.md               # Service A instructions and description
-│   └── service-b/
-│       ├── Dockerfile
-│       └── src/
-│   │   └── readme.md               # Service B instructions and description
-└── gateway/                        # API Gateway / reverse proxy
-    ├── Dockerfile
-    └── src/
+See [docs/architecture.md](docs/architecture.md) for details.
 
+## Getting Started
 
-```
+### Prerequisites
+- Docker and Docker Compose
+- Java 17
+- Maven
+- Git
 
----
-
-## 🚀 Getting Started
-
-1. **Clone this repository**
-
+### Setup
+1. Clone the repository:
    ```bash
-   git clone https://github.com/hungdn1701/microservices-assignment-starter.git
-   cd microservices-assignment-starter
+   git clone <repository-url>
+   cd movie_ticket_booking
    ```
-
-2. **Copy environment file**
-
+2. Copy the example environment file:
    ```bash
    cp .env.example .env
    ```
-
-3. **Run with Docker Compose**
-
+3. Update `.env` with your configuration (e.g., database credentials).
+4. Run the initialization script:
    ```bash
-   docker-compose up --build
+   chmod +x scripts/init.sh
+   ./scripts/init.sh
    ```
----
+5. Start all services:
+   ```bash
+   docker-compose up -d
+   ```
+6. Access the API Gateway at `http://localhost:8080`.
 
-## 🧪 Development Notes
+### Documentation
+- System architecture: [docs/architecture.md](docs/architecture.md)
+- Analysis and design: [docs/analysis-and-design.md](docs/analysis-and-design.md)
+- API specifications: [docs/api-specs/](docs/api-specs/)
+- Architecture diagram: [docs/asset/architecture-diagram.txt](docs/asset/architecture-diagram.txt)
 
-- Use `docs/api-specs/*.yaml` to document REST APIs using OpenAPI format (Swagger).
+### Services
+Each microservice is located in the `services/` folder, with its own `Dockerfile`, source code (`src/`), and `readme.md` for specific instructions:
+- `services/booking-service`
+- `services/movie-service`
+- `services/notification-service`
+- `services/payment-service`
+- `services/seat`
+- `services/showtime-service`
+- `services/user-service`
+- `gateway`: API Gateway configuration.
 
----
+## Contributing
+1. Fork the repository.
+2. Create a feature branch (`git checkout -b feature/your-feature`).
+3. Commit your changes (`git commit -m 'Add your feature'`).
+4. Push to the branch (`git push origin feature/your-feature`).
+5. Create a Pull Request.
 
-## 📚 Recommended Tasks
-- [ ] Document system analysis and design in `analysis-and-design.md` as the first step
-- [ ] Update `architecture.md` to describe your system components.
-- [ ] Define all APIs using OpenAPI YAML in `docs/api-specs/`.
-- [ ] Implement business logic in `service-a` and `service-b`.
-- [ ] Configure API Gateway
-- [ ] Ensure services can communicate internally using service names (Docker Compose handles networking).
-
----
-
-## 📌 Notes
-
-- Use Git branches for team collaboration.
-- Commit early, commit often!
-
----
-
-## 👩‍🏫 Assignment Submission
-
-Please make sure:
-- `README.md` is updated with service descriptions and API usage, following standard README conventions (e.g., clear structure, usage instructions, and contribution guidelines).
-- Include a list of team members and their contributions in the `README.md`.
-- All your code should be **runnable with one command**: `docker-compose up`.
-
-
-
-## Author
-
-This template was created by Hung Dang.
-- Email: hungdn@ptit.edu.vn
-- GitHub: hungdn1701
-
-
-Good luck! 💪🚀
-
+## License
+MIT License

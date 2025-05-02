@@ -1,0 +1,138 @@
+openapi: 3.0.3
+info:
+  title: Seat Service API
+  description: API for managing seat selection and locking in the movie_ticket_booking system.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api/seat
+    description: Seat Service endpoint
+paths:
+  /lock:
+    post:
+      summary: Lock seats
+      description: Locks specified seats for a showtime to prevent double-booking.
+      operationId: lockSeats
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LockSeatRequest'
+      responses:
+        '200':
+          description: Seats locked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LockSeatResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Seats already locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+  /book:
+    post:
+      summary: Book seats
+      description: Books locked seats for a booking.
+      operationId: bookSeats
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookSeatRequest'
+      responses:
+        '200':
+          description: Seats booked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeatResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+components:
+  schemas:
+    LockSeatRequest:
+      type: object
+      properties:
+        showtimeId:
+          type: string
+          example: "showtime456"
+        seatIds:
+          type: array
+          items:
+            type: string
+          example: ["seat1", "seat2"]
+      required:
+        - showtimeId
+        - seatIds
+    LockSeatResponse:
+      type: object
+      properties:
+        lockId:
+          type: string
+          example: "lock789"
+        status:
+          type: string
+          example: "LOCKED"
+      required:
+        - lockId
+        - status
+    BookSeatRequest:
+      type: object
+      properties:
+        lockId:
+          type: string
+          example: "lock789"
+        bookingId:
+          type: string
+          example: "booking789"
+      required:
+        - lockId
+        - bookingId
+    SeatResponse:
+      type: object
+      properties:
+        seatIds:
+          type: array
+          items:
+            type: string
+          example: ["seat1", "seat2"]
+        status:
+          type: string
+          example: "BOOKED"
+      required:
+        - seatIds
+        - status
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Seats already locked"
+        status:
+          type: integer
+          example: 409
+      required:
+        - message
+        - status
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

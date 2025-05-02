@@ -1,16 +1,180 @@
 version: '3.8'
+
 services:
-  service-a:
-    build: ./services/service-a
+  # Eureka Server
+  eureka-server:
+    image: maven:3.9.4-eclipse-temurin-17
+    container_name: eureka-server
+    volumes:
+      - ./eureka-server:/app
+    working_dir: /app
+    command: mvn spring-boot:run
     ports:
-      - "5001:5000"
+      - "8761:8761"
+    networks:
+      - ticket-network
 
-  service-b:
-    build: ./services/service-b
+  # API Gateway
+  api-gateway:
+    image: maven:3.9.4-eclipse-temurin-17
+    container_name: api-gateway
+    volumes:
+      - ./api-gateway:/app
+    working_dir: /app
+    command: mvn spring-boot:run
     ports:
-      - "5002:5000"
+      - "9090:9090"
+    depends_on:
+      - eureka-server
+      - movie-service
+      - showtime-service
+      - seat
+      - booking-service
+      - payment-service
+      - notification-service
+      - user-service
+    networks:
+      - ticket-network
 
-  gateway:
-    build: ./gateway
+  # Movie Service
+  movie-service:
+    image: maven:3.9.4-eclipse-temurin-17
+    container_name: movie-service
+    volumes:
+      - ./movie-service:/app
+    working_dir: /app
+    command: mvn spring-boot:run
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/movie_ticketing?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=rootpassword
+    depends_on:
+      - mysql
+      - eureka-server
+    networks:
+      - ticket-network
+
+  # Showtime Service
+  showtime-service:
+    image: maven:3.9.4-eclipse-temurin-17
+    container_name: showtime-service
+    volumes:
+      - ./showtime-service:/app
+    working_dir: /app
+    command: mvn spring-boot:run
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/movie_ticketing?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=rootpassword
+    depends_on:
+      - mysql
+      - eureka-server
+    networks:
+      - ticket-network
+
+  # Seat Service
+  seat:
+    image: maven:3.9.4-eclipse-temurin-17
+    container_name: seat
+    volumes:
+      - ./seat:/app
+    working_dir: /app
+    command: mvn spring-boot:run
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/movie_ticketing?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=rootpassword
+    depends_on:
+      - mysql
+      - eureka-server
+    networks:
+      - ticket-network
+
+  # Booking Service
+  booking-service:
+    image: maven:3.9.4-eclipse-temurin-17
+    container_name: booking-service
+    volumes:
+      - ./booking-service:/app
+    working_dir: /app
+    command: mvn spring-boot:run
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/movie_ticketing?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=rootpassword
+    depends_on:
+      - mysql
+      - seat
+      - eureka-server
+    networks:
+      - ticket-network
+
+  # Payment Service
+  payment-service:
+    image: maven:3.9.4-eclipse-temurin-17
+    container_name: payment-service
+    volumes:
+      - ./payment-service:/app
+    working_dir: /app
+    command: mvn spring-boot:run
+    environment:
+      - STRIPE_API_KEY=your_stripe_api_key
+    depends_on:
+      - eureka-server
+    networks:
+      - ticket-network
+
+  # Notification Service
+  notification-service:
+    image: maven:3.9.4-eclipse-temurin-17
+    container_name: notification-service
+    volumes:
+      - ./notification-service:/app
+    working_dir: /app
+    command: mvn spring-boot:run
+    environment:
+      - SENDGRID_API_KEY=SG.xxxxxxx
+    depends_on:
+      - eureka-server
+    networks:
+      - ticket-network
+
+  # User Service
+  user-service:
+    image: maven:3.9.4-eclipse-temurin-17
+    container_name: user-service
+    volumes:
+      - ./user-service:/app
+    working_dir: /app
+    command: mvn spring-boot:run
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/movie_ticketing?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=rootpassword
+    depends_on:
+      - mysql
+      - eureka-server
+    networks:
+      - ticket-network
+
+
+  # MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: movie_ticketing
     ports:
-      - "8080:8000"
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - ticket-network
+
+volumes:
+  mysql-data:
+
+networks:
+  ticket-network:
+    driver: bridge

@@ -1,0 +1,122 @@
+openapi: 3.0.3
+info:
+  title: Payment Service API
+  description: API for processing payments in the movie_ticket_booking system.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api/payment
+    description: Payment Service endpoint
+paths:
+  /pay:
+    post:
+      summary: Process a payment
+      description: Processes a payment for a booking.
+      operationId: processPayment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '200':
+          description: Payment processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '400':
+          description: Invalid payment request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+  /status/{paymentId}:
+    get:
+      summary: Check payment status
+      description: Retrieves the status of a payment by ID.
+      operationId: getPaymentStatus
+      parameters:
+        - name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentStatusResponse'
+        '404':
+          description: Payment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+components:
+  schemas:
+    PaymentRequest:
+      type: object
+      properties:
+        bookingId:
+          type: string
+          example: "booking789"
+        amount:
+          type: number
+          format: double
+          example: 20.00
+        paymentMethod:
+          type: string
+          enum: [CREDIT_CARD, DEBIT_CARD, PAYPAL]
+          example: "CREDIT_CARD"
+      required:
+        - bookingId
+        - amount
+        - paymentMethod
+    PaymentResponse:
+      type: object
+      properties:
+        paymentId:
+          type: string
+          example: "payment123"
+        status:
+          type: string
+          example: "SUCCESS"
+      required:
+        - paymentId
+        - status
+    PaymentStatusResponse:
+      type: object
+      properties:
+        paymentId:
+          type: string
+          example: "payment123"
+        status:
+          type: string
+          example: "SUCCESS"
+      required:
+        - paymentId
+        - status
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Invalid payment request"
+        status:
+          type: integer
+          example: 400
+      required:
+        - message
+        - status
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

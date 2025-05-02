@@ -1,0 +1,111 @@
+openapi: 3.0.3
+info:
+  title: Showtime Service API
+  description: API for managing movie showtimes in the movie_ticket_booking system.
+  version: 0.0.1
+servers:
+  - url: http://localhost:8080/api/showtime
+    description: Showtime Service endpoint
+paths:
+  /showtimes:
+    get:
+      summary: List all showtimes
+      description: Retrieves a list of available showtimes.
+      operationId: getShowtimes
+      responses:
+        '200':
+          description: List of showtimes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Showtime'
+    post:
+      summary: Add a new showtime
+      description: Allows admins to add a new showtime (admin-only).
+      operationId: addShowtime
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Showtime'
+      responses:
+        '201':
+          description: Showtime added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Showtime'
+        '400':
+          description: Invalid showtime data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+  /showtimes/{id}:
+    get:
+      summary: Get showtime details
+      description: Retrieves details of a specific showtime by ID.
+      operationId: getShowtimeById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Showtime details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Showtime'
+        '404':
+          description: Showtime not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    Showtime:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "showtime456"
+        movieId:
+          type: string
+          example: "movie123"
+        cinemaId:
+          type: string
+          example: "cinema789"
+        startTime:
+          type: string
+          format: date-time
+          example: "2025-05-10T19:00:00Z"
+      required:
+        - movieId
+        - cinemaId
+        - startTime
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Showtime not found"
+        status:
+          type: integer
+          example: 404
+      required:
+        - message
+        - status
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

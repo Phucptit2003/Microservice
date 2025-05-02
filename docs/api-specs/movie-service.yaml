@@ -1,0 +1,110 @@
+openapi: 3.0.3
+info:
+  title: Movie Service API
+  description: API for managing movie information in the movie_ticket_booking system.
+  version: 0.0.1
+servers:
+  - url: http://localhost:8080/api/movie
+    description: Movie Service endpoint
+paths:
+  /movies:
+    get:
+      summary: List all movies
+      description: Retrieves a list of available movies.
+      operationId: getMovies
+      responses:
+        '200':
+          description: List of movies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Movie'
+    post:
+      summary: Add a new movie
+      description: Allows admins to add a new movie (admin-only).
+      operationId: addMovie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Movie'
+      responses:
+        '201':
+          description: Movie added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        '400':
+          description: Invalid movie data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+  /movies/{id}:
+    get:
+      summary: Get movie details
+      description: Retrieves details of a specific movie by ID.
+      operationId: getMovieById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Movie details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        '404':
+          description: Movie not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    Movie:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "movie123"
+        title:
+          type: string
+          example: "Inception"
+        genre:
+          type: string
+          example: "Sci-Fi"
+        duration:
+          type: integer
+          example: 148
+      required:
+        - title
+        - genre
+        - duration
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Movie not found"
+        status:
+          type: integer
+          example: 404
+      required:
+        - message
+        - status
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

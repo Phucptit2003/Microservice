@@ -1,0 +1,46 @@
+Architecture Diagram Description for movie_ticket_booking
+
+1. Components:
+   - Client (Web/Mobile App): Sends HTTP requests to the API Gateway.
+   - API Gateway (Spring Cloud Gateway): Routes requests, validates JWT.
+   - Eureka Server: Registers and discovers microservices.
+   - Microservices:
+     - User Service: Manages authentication and user data.
+     - Movie Service: Manages movie information.
+     - Showtime Service: Manages showtimes and cinemas.
+     - Seat Service: Manages seat locking and booking.
+     - Booking Service: Coordinates booking process.
+     - Payment Service: Processes payments.
+     - Notification Service: Sends notifications.
+   - Databases: PostgreSQL for each service.
+   - External Services: Payment provider (e.g., Stripe), notification provider.
+
+2. Interactions:
+   - Client -> API Gateway: HTTP requests (GET, POST, etc.).
+   - API Gateway -> Microservices: Routes requests based on path (e.g., /api/booking -> Booking Service).
+   - Microservices -> Eureka Server: Register and discover other services.
+   - Booking Service -> Showtime/Seat/Payment/Notification Services: REST calls via Feign Client.
+   - Microservices -> Databases: CRUD operations.
+   - Payment Service -> External Payment Provider: Processes transactions.
+   - Notification Service -> External Notification Provider: Sends emails/SMS.
+
+3. Flow Example (Booking a Ticket):
+   - Client sends POST /api/booking/book to API Gateway.
+   - API Gateway validates JWT, routes to Booking Service.
+   - Booking Service:
+     - Calls Showtime Service to validate showtime.
+     - Calls Seat Service to lock seats.
+     - Calls Payment Service to process payment.
+     - Calls Notification Service to send confirmation.
+   - Each service updates its database.
+
+4. Notes:
+   - Use Docker Compose to run services locally.
+   - Consider adding RabbitMQ for asynchronous communication in the future.
+   - Use Prometheus/Grafana for monitoring.
+
+To visualize, use a diagramming tool like Draw.io:
+- Draw boxes for each component (Client, API Gateway, Eureka Server, Microservices, Databases).
+- Add arrows to show HTTP/REST calls and database interactions.
+- Label arrows with protocols (e.g., HTTP, JDBC).
+- Include a legend for colors (e.g., blue for services, green for databases).

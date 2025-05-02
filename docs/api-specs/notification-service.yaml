@@ -1,0 +1,79 @@
+openapi: 3.0.3
+info:
+  title: Notification Service API
+  description: API for sending notifications in the movie_ticket_booking system.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api/notification
+    description: Notification Service endpoint
+paths:
+  /notify:
+    post:
+      summary: Send a notification
+      description: Sends a notification (e.g., booking confirmation) to a user.
+      operationId: sendNotification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationRequest'
+      responses:
+        '200':
+          description: Notification sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+components:
+  schemas:
+    NotificationRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+          example: "user123"
+        message:
+          type: string
+          example: "Your booking for Inception is confirmed!"
+        type:
+          type: string
+          enum: [EMAIL, SMS, PUSH]
+          example: "EMAIL"
+      required:
+        - userId
+        - message
+        - type
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Notification sent successfully"
+      required:
+        - message
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Invalid notification request"
+        status:
+          type: integer
+          example: 400
+      required:
+        - message
+        - status
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

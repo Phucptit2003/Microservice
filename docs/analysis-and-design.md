@@ -1,101 +1,88 @@
-# 📊 Microservices System - Analysis and Design
+# System Analysis and Design
 
-This document outlines the **analysis** and **design** process for your microservices-based system assignment. Use it to explain your thinking and architecture decisions.
+## 1. System Analysis
 
----
+### 1.1. Requirements
+The `movie_ticket_booking` system is designed to provide an online platform for users to browse movies, select showtimes, book seats, and complete payments. Key requirements include:
 
-## 1. 🎯 Problem Statement
+- **Functional Requirements**:
+  - Users can register, log in, and manage their profiles.
+  - Users can browse movies and showtimes by cinema.
+  - Users can select and book seats for a showtime.
+  - The system processes payments securely.
+  - Users receive booking confirmations via notifications.
+  - Admins can manage movies, showtimes, and cinemas.
+- **Non-Functional Requirements**:
+  - High availability: The system should handle multiple concurrent users.
+  - Security: User data and transactions must be protected (using JWT).
+  - Scalability: The system should scale to support growing user demand.
+  - Performance: Booking process should complete within seconds.
 
-_Describe the problem your system is solving._
+### 1.2. Stakeholders
+- **End Users**: Customers booking movie tickets.
+- **Admins**: Manage movies, showtimes, and cinemas.
+- **Developers**: Maintain and extend the system.
 
-- Who are the users?
-- What are the main goals?
-- What kind of data is processed?
+### 1.3. Use Cases
+- **User Use Cases**:
+  - Register and log in.
+  - Browse movies and showtimes.
+  - Select seats and book tickets.
+  - Make payments and receive confirmations.
+- **Admin Use Cases**:
+  - Add, update, or delete movies.
+  - Schedule showtimes for cinemas.
+- **System Use Cases**:
+  - Validate user authentication.
+  - Lock seats to prevent double-booking.
+  - Process payments securely.
 
-> Example: A course management system that allows students to register for courses and teachers to manage class rosters.
+## 2. System Design
 
----
+### 2.1. High-Level Design
+The system uses a microservice architecture with the following services:
+- **User Service**: Handles user authentication and profile management.
+- **Movie Service**: Manages movie data and admin operations.
+- **Showtime Service**: Manages showtimes and cinema information.
+- **Seat Service**: Handles seat selection and locking.
+- **Booking Service**: Orchestrates the booking process.
+- **Payment Service**: Processes payments.
+- **Notification Service**: Sends notifications.
+- **API Gateway**: Routes requests and enforces security.
+- **Eureka Server**: Manages service discovery.
 
-## 2. 🧩 Identified Microservices
+### 2.2. Data Model
+Each service has its own data model (stored in PostgreSQL):
+- **User Service**:
+  - `Client`: Stores user information (ID, name, email, password hash).
+- **Movie Service**:
+  - `Movie`: Stores movie details (ID, title, genre, duration).
+- **Showtime Service**:
+  - `Showtime`: Stores showtime details (ID, movie ID, cinema ID, time).
+  - `Cinema`: Stores cinema details (ID, name, location).
+- **Seat Service**:
+  - `Seat`: Stores seat details (ID, showtime ID, seat number, status).
+- **Booking Service**:
+  - `Booking`: Stores booking details (ID, user ID, showtime ID, seat IDs, payment status).
+- **Payment Service**:
+  - `Payment`: Stores payment details (ID, booking ID, amount, status).
+- **Notification Service**:
+  - `Notification`: Stores notification details (ID, user ID, message, status).
 
-List the microservices in your system and their responsibilities.
+### 2.3. Design Considerations
+- **Database per Service**: Each microservice uses its own PostgreSQL database to ensure loose coupling.
+- **Synchronous Communication**: Services use REST APIs with Feign Client for quick interactions.
+- **Security**: JWT tokens are validated at the API Gateway and individual services.
+- **Concurrency**: Seat locking prevents double-booking during the booking process.
+- **Error Handling**: Global exception handlers manage errors gracefully.
 
-| Service Name  | Responsibility                                | Tech Stack   |
-|---------------|------------------------------------------------|--------------|
-| service-a     | Handles user authentication and authorization | Python Flask |
-| service-b     | Manages course registration and class data    | Python Flask |
-| gateway       | Routes requests to services                   | Nginx / Flask|
+### 2.4. Assumptions
+- Each service uses PostgreSQL as its database.
+- The system is deployed locally using Docker Compose, with potential for cloud deployment.
+- Payment processing integrates with an external provider (e.g., Stripe).
 
----
-
-## 3. 🔄 Service Communication
-
-Describe how your services communicate (e.g., REST APIs, message queue, gRPC).
-
-- Gateway ⇄ service-a (REST)
-- Gateway ⇄ service-b (REST)
-- Internal: service-a ⇄ service-b (optional)
-
----
-
-## 4. 🗂️ Data Design
-
-Describe how data is structured and stored in each service.
-
-- service-a: User accounts, credentials
-- service-b: Course catalog, registrations
-
-Use diagrams if possible (DB schema, ERD, etc.)
-
----
-
-## 5. 🔐 Security Considerations
-
-- Use JWT for user sessions
-- Validate input on each service
-- Role-based access control for APIs
-
----
-
-
-## 6. 📦 Deployment Plan
-
-- Use `docker-compose` to manage local environment
-- Each service has its own Dockerfile
-- Environment config stored in `.env` file
-
----
-
-## 7. 🎨 Architecture Diagram
-
-> *(You can add an image or ASCII diagram below)*
-
-```
-+---------+        +--------------+
-| Gateway | <----> | Service A    |
-|         | <----> | Auth Service |
-+---------+        +--------------+
-       |                ^
-       v                |
-+--------------+   +------------------+
-| Service B    |   | Database / Redis |
-| Course Mgmt  |   +------------------+
-+--------------+
-```
-
----
-
-## ✅ Summary
-
-Summarize why this architecture is suitable for your use case, how it scales, and how it supports independent development and deployment.
-
-
-
-## Author
-
-This template was created by Hung Dang.
-- Email: hungdn@ptit.edu.vn
-- GitHub: hungdn1701
-
-
-Good luck! 💪🚀
+## 3. Future Enhancements
+- Add asynchronous communication using RabbitMQ or Kafka.
+- Implement caching (e.g., Redis) for frequently accessed data like movie listings.
+- Add comprehensive API documentation using Swagger.
+- Integrate monitoring tools (e.g., Prometheus, Grafana).
