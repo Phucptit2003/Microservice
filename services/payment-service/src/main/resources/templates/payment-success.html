@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 40px;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+        .success-icon {
+            color: #28a745;
+            font-size: 64px;
+            margin-bottom: 24px;
+        }
+        h1 {
+            color: #28a745;
+            margin-bottom: 16px;
+        }
+        .details {
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            padding: 16px;
+            margin: 24px 0;
+            text-align: left;
+        }
+        .details p {
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .details span {
+            font-weight: bold;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 16px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #0069d9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">✓</div>
+        <h1>Payment Successful!</h1>
+        <p>Thank you for your payment. Your transaction has been completed successfully.</p>
+        
+        <div class="details" th:if="${payment != null}">
+            <h3>Payment Details</h3>
+            <p>Order ID: <span th:text="${payment.orderId}">ORD-123456</span></p>
+            <p>Amount: <span th:text="${payment.currency + ' ' + payment.amount}">USD 29.99</span></p>
+            <p>Payment ID: <span th:text="${payment.paymentId}">PAY-123456789</span></p>
+            <p>Date: <span th:text="${#temporals.format(payment.createdAt, 'dd-MM-yyyy HH:mm')}">01-01-2023 12:34</span></p>
+        </div>
+        
+        <a href="/" class="btn">Return to Home</a>
+    </div>
+</body>
+</html> 
