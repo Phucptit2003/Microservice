@@ -5,11 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.user_service.entity.Client;
 import com.user_service.entity.UserSignInDTO;
@@ -36,7 +32,12 @@ public class UserController {
 
 	@PostMapping("/register")
 	public ResponseEntity<?> register(@RequestBody Client user) {
-		return ResponseEntity.ok(userService.registerUser(user.getUsername(), user.getPassword(), user.getRole()));
+		return ResponseEntity.ok(userService.registerUser(user.getUsername(), user.getEmail(), user.getPassword(), user.getRole()));
+	}
+
+	@GetMapping("/")
+	public ResponseEntity<?> getUserByEmail(@RequestParam String email) {
+		return ResponseEntity.ok(userService.findByEmail(email));
 	}
 
 	@PostMapping("/login")

@@ -27,12 +27,12 @@ public class BookingController {
 	@PostMapping("/create")
 	public ResponseEntity<?> createBooking(@RequestBody BookingRequest request) {
 		try {
-			log.info("Tạo booking cho userId: {}, showtimeId: {}, seats: {}",
-					request.getUserId(), request.getShowtimeId(), request.getSeats());
+			log.info("Tạo booking cho user: {}, showtimeId: {}, seats: {}",
+					request.getUserEmail(), request.getShowtimeId(), request.getSeats());
 
 			Mono<String> lockResponse = webClientBuilder.build()
 					.post()
-					.uri("http://seat-service/api/seats/lock")
+					.uri("http://seat/api/seats/lock")
 					.bodyValue(new LockSeatRequest(request.getShowtimeId(), request.getSeats()))
 					.retrieve()
 					.bodyToMono(String.class);
@@ -45,7 +45,7 @@ public class BookingController {
 			}
 
 			String bookingId = bookingService.createBooking(
-					request.getUserId(),
+					request.getUserEmail(),
 					request.getShowtimeId(),
 					request.getSeats()
 			);

@@ -4,22 +4,22 @@ import java.util.Collections;
 import java.util.List;
 
 public  class BookingRequest {
-    private String userId;
+    private String userEmail;
     private String showtimeId;
     private String seats;
 
-    public BookingRequest(String userId, String showtimeId, String seats) {
-        this.userId = userId;
+    public BookingRequest(String userEmail, String showtimeId, String seats) {
+        this.userEmail = userEmail;
         this.showtimeId = showtimeId;
         this.seats = seats;
     }
 
-    public String getUserId() {
-        return userId;
+    public String getUserEmail() {
+        return userEmail;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
     }
 
     public String getShowtimeId() {

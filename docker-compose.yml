@@ -6,7 +6,7 @@ services:
     image: maven:3.9.4-eclipse-temurin-17
     container_name: eureka-server
     volumes:
-      - ./eureka-server:/app
+      - ./services/eureka-server:/app
     working_dir: /app
     command: mvn spring-boot:run
     ports:
@@ -41,13 +41,13 @@ services:
     image: maven:3.9.4-eclipse-temurin-17
     container_name: movie-service
     volumes:
-      - ./movie-service:/app
+      - ./services/movie-service:/app
     working_dir: /app
     command: mvn spring-boot:run
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/movie_ticketing?useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
     depends_on:
       - mysql
       - eureka-server
@@ -59,13 +59,13 @@ services:
     image: maven:3.9.4-eclipse-temurin-17
     container_name: showtime-service
     volumes:
-      - ./showtime-service:/app
+      - ./services/showtime-service:/app
     working_dir: /app
     command: mvn spring-boot:run
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/movie_ticketing?useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
     depends_on:
       - mysql
       - eureka-server
@@ -77,13 +77,13 @@ services:
     image: maven:3.9.4-eclipse-temurin-17
     container_name: seat
     volumes:
-      - ./seat:/app
+      - ./services/seat:/app
     working_dir: /app
     command: mvn spring-boot:run
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/movie_ticketing?useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
     depends_on:
       - mysql
       - eureka-server
@@ -95,13 +95,13 @@ services:
     image: maven:3.9.4-eclipse-temurin-17
     container_name: booking-service
     volumes:
-      - ./booking-service:/app
+      - ./services/booking-service:/app
     working_dir: /app
     command: mvn spring-boot:run
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/movie_ticketing?useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
     depends_on:
       - mysql
       - seat
@@ -114,12 +114,17 @@ services:
     image: maven:3.9.4-eclipse-temurin-17
     container_name: payment-service
     volumes:
-      - ./payment-service:/app
+      - ./services/payment-service:/app
     working_dir: /app
     command: mvn spring-boot:run
     environment:
-      - STRIPE_API_KEY=your_stripe_api_key
+      - STRIPE_API_KEY=${STRIPE_API_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/movie_ticketing?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
     depends_on:
+      - mysql
       - eureka-server
     networks:
       - ticket-network
@@ -129,12 +134,21 @@ services:
     image: maven:3.9.4-eclipse-temurin-17
     container_name: notification-service
     volumes:
-      - ./notification-service:/app
+      - ./services/notification-service:/app
     working_dir: /app
     command: mvn spring-boot:run
     environment:
-      - SENDGRID_API_KEY=SG.xxxxxxx
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/movie_ticketing?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - SPRING_MAIL_HOST=smtp.gmail.com
+      - SPRING_MAIL_PORT=587
+      - SPRING_MAIL_USERNAME=${SPRING_MAIL_USERNAME}
+      - SPRING_MAIL_PASSWORD=${SPRING_MAIL_PASSWORD}
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
     depends_on:
+      - mysql
       - eureka-server
     networks:
       - ticket-network
@@ -144,13 +158,13 @@ services:
     image: maven:3.9.4-eclipse-temurin-17
     container_name: user-service
     volumes:
-      - ./user-service:/app
+      - ./services/user-service:/app
     working_dir: /app
     command: mvn spring-boot:run
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/movie_ticketing?useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
     depends_on:
       - mysql
       - eureka-server
@@ -163,7 +177,7 @@ services:
     image: mysql:8.0
     container_name: mysql
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       MYSQL_DATABASE: movie_ticketing
     ports:
       - "3307:3306"

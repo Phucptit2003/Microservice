@@ -17,7 +17,7 @@ public class UserService {
 	@Lazy
 	private PasswordEncoder passEncoder;
 	
-	public Client registerUser(String username, String password, String role) {
+	public Client registerUser(String username, String email, String password, String role) {
         if (userRepo.findByUsername(username).isPresent()) {
             throw new IllegalArgumentException("Username already exists");
         }
@@ -25,6 +25,7 @@ public class UserService {
         Client user = new Client();
         user.setUsername(username);
         user.setPassword(passEncoder.encode(password));
+        user.setEmail(email);
         user.setRole(role);
 
         return userRepo.save(user);
@@ -32,5 +33,8 @@ public class UserService {
 
     public Client findByUsername(String username) {
         return userRepo.findByUsername(username).orElse(null);
+    }
+    public Client findByEmail(String email) {
+        return userRepo.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("Email not found"));
     }
 }
