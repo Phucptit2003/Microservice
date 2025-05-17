@@ -15,6 +15,11 @@ public class SeatController {
     @Autowired
     private SeatService seatService;
 
+    @GetMapping("/test")
+    public String test() {
+        return "Seat Service is running!";
+    }
+
     @GetMapping("/showtime/{showtimeId}")
     public ResponseEntity<List<SeatResponse>> getSeatsByShowtime(@PathVariable Long showtimeId) {
         List<SeatResponse> seats = seatService.getSeatsByShowtime(showtimeId);
