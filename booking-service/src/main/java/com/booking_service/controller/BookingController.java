@@ -52,7 +52,7 @@ public class BookingController {
 	public ResponseEntity<?> createBooking(@RequestBody BookingRequest request) {
 		try {
 			log.info("Tạo booking cho userId: {}, showtimeId: {}, seats: {}, movie: {}, showtimeTime: {}",
-					request.getUser().getId(), request.getShowtimeId(), request.getSeats(),
+					request.getCustomerEmail(), request.getShowtimeId(), request.getSeats(),
 					request.getMovie() != null ? request.getMovie().getTitle() : "null",
 					request.getShowtimeTime());
 
@@ -78,14 +78,43 @@ public class BookingController {
 			}
 
 			String bookingId = bookingService.createBooking(
-					request.getUser(),
+					request.getCustomerEmail(),
 					request.getShowtimeId(),
 					request.getSeats(),
 					request.getMovie().getTitle(),
 					request.getShowtimeTime()
 			);
 			log.info("Tạo booking thành công, bookingId: {}", bookingId);
-			return ResponseEntity.ok(new BookingResponse(bookingId));
+
+			// Call payment-service to create payment link
+			// Assume amount, currency, successUrl, cancelUrl, customerEmail are in request
+			var paymentRequestDto = new java.util.HashMap<String, Object>();
+			paymentRequestDto.put("orderId", bookingId);
+			paymentRequestDto.put("amount", request.getAmount());
+			paymentRequestDto.put("currency", request.getCurrency());
+			paymentRequestDto.put("description", "Booking for movie: " + request.getMovie().getTitle());
+			paymentRequestDto.put("successUrl", request.getSuccessUrl());
+			paymentRequestDto.put("cancelUrl", request.getCancelUrl());
+			paymentRequestDto.put("customerEmail", request.getCustomerEmail());
+
+			Mono<java.util.Map> paymentResponseMono = webClient
+					.post()
+					.uri("http://payment-service/api/payments/create-checkout-session")
+					.bodyValue(paymentRequestDto)
+					.retrieve()
+					.bodyToMono(java.util.Map.class)
+					.retryWhen(
+							Retry.backoff(3, Duration.ofSeconds(1))
+									.filter(throwable -> throwable instanceof WebClientException)
+									.doBeforeRetry(retrySignal -> log.warn("Retry lần {} do lỗi: {}",
+											retrySignal.totalRetries() + 1, retrySignal.failure().getMessage()))
+					)
+					.doOnError(error -> log.error("Lỗi khi gọi payment service: {}", error.getMessage(), error));
+
+			java.util.Map paymentResponse = paymentResponseMono.block();
+			String paymentLink = paymentResponse != null && paymentResponse.get("checkoutUrl") != null ? paymentResponse.get("checkoutUrl").toString() : null;
+
+			return ResponseEntity.ok(new BookingResponse(bookingId, paymentLink));
 		} catch (Exception e) {
 			log.error("Lỗi khi tạo booking: {}", e.getMessage(), e);
 			return ResponseEntity.badRequest().body(new ErrorResponse("Lỗi khi tạo booking: " + e.getMessage()));
@@ -130,11 +159,12 @@ public class BookingController {
 		try {
 			log.info("Xác nhận booking cho bookingId: {}, sessionId: {}", bookingId, confirmRequest.getSessionId());
 
-			Mono<PaymentStatusResponse> paymentStatus = webClient
+			// Call payment-service to get payment status by sessionId
+			Mono<java.util.Map> paymentStatus = webClient
 					.get()
-					.uri("http://payment-service/api/payments/status/" + confirmRequest.getSessionId())
+					.uri("http://payment-service/api/payments/session/" + confirmRequest.getSessionId())
 					.retrieve()
-					.bodyToMono(PaymentStatusResponse.class)
+					.bodyToMono(java.util.Map.class)
 					.retryWhen(
 							Retry.backoff(3, Duration.ofSeconds(1))
 									.filter(throwable -> throwable instanceof WebClientException)
@@ -143,10 +173,11 @@ public class BookingController {
 					)
 					.doOnError(error -> log.error("Lỗi khi gọi payment service: {}", error.getMessage(), error));
 
-			PaymentStatusResponse statusResponse = paymentStatus.block();
-			if (statusResponse == null || !"complete".equals(statusResponse.getStatus())) {
+			java.util.Map statusResponse = paymentStatus.block();
+			String paymentStatusStr = statusResponse != null && statusResponse.get("status") != null ? statusResponse.get("status").toString() : null;
+			if (paymentStatusStr == null || !paymentStatusStr.equalsIgnoreCase("COMPLETED")) {
 				log.warn("Thanh toán thất bại hoặc bị hủy cho bookingId: {}, status: {}",
-						bookingId, statusResponse != null ? statusResponse.getStatus() : "null");
+						bookingId, paymentStatusStr);
 
 				BookingDetails bookingDetails = bookingService.getBookingDetails(bookingId);
 				if (bookingDetails != null) {

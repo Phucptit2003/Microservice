@@ -75,4 +75,9 @@ public class UserController {
 			return ResponseEntity.status(500).body("Lỗi khi lấy thông tin người dùng: " + e.getMessage());
 		}
 	}
+
+	@GetMapping("/")
+	public ResponseEntity<?> getUserByEmail(@RequestParam String email) {
+		return ResponseEntity.ok(userService.findByEmail(email));
+	}
 }

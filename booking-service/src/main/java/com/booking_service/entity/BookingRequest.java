@@ -5,10 +5,10 @@ import java.util.List;
 
 public class BookingRequest {
     @JsonProperty("user")
-    private UserResponse user;
+    private String customerEmail;
 
     @JsonProperty("showtimeId")
-    private String showtimeId;
+    private long showtimeId;
 
     @JsonProperty("seats")
     private List<String> seats;
@@ -19,12 +19,17 @@ public class BookingRequest {
     @JsonProperty("showtimeTime")
     private String showtimeTime;
 
+    private double amount;
+    private String currency;
+    private String successUrl;
+    private String cancelUrl;
+
     // Constructor mặc định
     public BookingRequest() {}
 
     // Constructor đầy đủ
-    public BookingRequest(UserResponse user, String showtimeId, List<String> seats, Movie movie, String showtimeTime) {
-        this.user = user;
+    public BookingRequest(String customerEmail, long showtimeId, List<String> seats, Movie movie, String showtimeTime) {
+        this.customerEmail = customerEmail;
         this.showtimeId = showtimeId;
         this.seats = seats;
         this.movie = movie;
@@ -32,19 +37,19 @@ public class BookingRequest {
     }
 
     // Getters và Setters
-    public UserResponse getUser() {
-        return user;
+    public String getCustomerEmail() {
+        return customerEmail;
     }
 
-    public void setUser(UserResponse user) {
-        this.user = user;
+    public void setUserEmail(String customerEmail) {
+        this.customerEmail = customerEmail;
     }
 
-    public String getShowtimeId() {
+    public long getShowtimeId() {
         return showtimeId;
     }
 
-    public void setShowtimeId(String showtimeId) {
+    public void setShowtimeId(long showtimeId) {
         this.showtimeId = showtimeId;
     }
 
@@ -71,6 +76,15 @@ public class BookingRequest {
     public void setShowtimeTime(String showtimeTime) {
         this.showtimeTime = showtimeTime;
     }
+
+    public double getAmount() { return amount; }
+    public void setAmount(double amount) { this.amount = amount; }
+    public String getCurrency() { return currency; }
+    public void setCurrency(String currency) { this.currency = currency; }
+    public String getSuccessUrl() { return successUrl; }
+    public void setSuccessUrl(String successUrl) { this.successUrl = successUrl; }
+    public String getCancelUrl() { return cancelUrl; }
+    public void setCancelUrl(String cancelUrl) { this.cancelUrl = cancelUrl; }
 
     public static class User {
         @JsonProperty("id")
