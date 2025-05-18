@@ -8,4 +8,5 @@ import com.user_service.entity.Client;
 
 public interface UserRepository extends JpaRepository<Client, Long> {
 	Optional<Client> findByUsername(String username);
+	Optional<Client> findByEmail(String email);
 }

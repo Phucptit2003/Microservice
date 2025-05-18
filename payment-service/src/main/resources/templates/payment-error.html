@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Error</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 40px;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+        .error-icon {
+            color: #dc3545;
+            font-size: 64px;
+            margin-bottom: 24px;
+        }
+        h1 {
+            color: #dc3545;
+            margin-bottom: 16px;
+        }
+        .message {
+            margin: 24px 0;
+            line-height: 1.6;
+        }
+        .btn-group {
+            margin-top: 32px;
+        }
+        .btn {
+            border: none;
+            border-radius: 4px;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0 8px;
+            transition: background-color 0.3s;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0069d9;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-icon">!</div>
+        <h1>Payment Error</h1>
+        <p>We encountered an error while processing your payment.</p>
+        
+        <div class="message">
+            <p>This could be due to:</p>
+            <ul style="text-align: left; display: inline-block;">
+                <li>Invalid payment information</li>
+                <li>Connection issues</li>
+                <li>Temporary system error</li>
+            </ul>
+            <p>No charges have been made to your account.</p>
+        </div>
+        
+        <div class="btn-group">
+            <a href="/api/payments/retry" class="btn btn-primary">Try Again</a>
+            <a href="/" class="btn btn-secondary">Return to Home</a>
+        </div>
+    </div>
+</body>
+</html> 

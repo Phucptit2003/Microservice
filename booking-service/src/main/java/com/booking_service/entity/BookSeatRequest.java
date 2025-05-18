@@ -3,16 +3,16 @@ package com.booking_service.entity;
 import java.util.List;
 
 public class BookSeatRequest {
-    private String showtimeId;
+    private long showtimeId;
     private List<String> seatNumbers;
 
-    public BookSeatRequest(String showtimeId, List<String> seatNumbers) {
+    public BookSeatRequest(long showtimeId, List<String> seatNumbers) {
         this.showtimeId = showtimeId;
         this.seatNumbers = seatNumbers;
     }
 
-    public String getShowtimeId() { return showtimeId; }
-    public void setShowtimeId(String showtimeId) { this.showtimeId = showtimeId; }
+    public long getShowtimeId() { return showtimeId; }
+    public void setShowtimeId(long showtimeId) { this.showtimeId = showtimeId; }
     public List<String> getSeatNumbers() { return seatNumbers; }
     public void setSeatNumbers(List<String> seatNumbers) { this.seatNumbers = seatNumbers; }
 }

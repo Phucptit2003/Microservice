@@ -37,4 +37,7 @@ public class UserService {
     public Client findById(String id) {
         return userRepo.findById(Long.parseLong(id.trim())).orElse(null);
     }
+    public Client findByEmail(String email) {
+        return userRepo.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("Email not found"));
+    }
 }

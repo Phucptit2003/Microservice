@@ -46,8 +46,8 @@ services:
     command: mvn spring-boot:run
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/movie_ticketing?useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
     depends_on:
       - mysql
       - eureka-server
@@ -64,8 +64,8 @@ services:
     command: mvn spring-boot:run
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/movie_ticketing?useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
     depends_on:
       - mysql
       - eureka-server
@@ -82,8 +82,8 @@ services:
     command: mvn spring-boot:run
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/movie_ticketing?useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
     depends_on:
       - mysql
       - eureka-server
@@ -100,8 +100,8 @@ services:
     command: mvn spring-boot:run
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/movie_ticketing?useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
     depends_on:
       - mysql
       - seat
@@ -118,7 +118,11 @@ services:
     working_dir: /app
     command: mvn spring-boot:run
     environment:
-      - STRIPE_API_KEY=sk_test_51REplzQqMHKH1gNhDDKh9RFT8xE9NePO8cvV2TarffMp2WugVFWmSjNYj9U5qZbnJaxDi7zzFYoarToh3WSiBNit00sVwb7ZRs
+      - STRIPE_API_KEY=${STRIPE_API_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/movie_ticketing?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
     depends_on:
       - eureka-server
     networks:
@@ -133,7 +137,15 @@ services:
     working_dir: /app
     command: mvn spring-boot:run
     environment:
-      - SENDGRID_API_KEY=HWPG5E4AKWSNAWK4C2XS8TL5
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/movie_ticketing?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - SPRING_MAIL_HOST=smtp.gmail.com
+      - SPRING_MAIL_PORT=587
+      - SPRING_MAIL_USERNAME=${SPRING_MAIL_USERNAME}
+      - SPRING_MAIL_PASSWORD=${SPRING_MAIL_PASSWORD}
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
     depends_on:
       - eureka-server
     networks:
@@ -149,8 +161,8 @@ services:
     command: mvn spring-boot:run
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/movie_ticketing?useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
     depends_on:
       - mysql
       - eureka-server
@@ -163,7 +175,7 @@ services:
     image: mysql:8.0
     container_name: mysql
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       MYSQL_DATABASE: movie_ticketing
     ports:
       - "3307:3306"

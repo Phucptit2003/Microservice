@@ -24,16 +24,15 @@ public class BookingService {
 	@Autowired
 	private WebClient.Builder webClientBuilder;
 
-	public String createBooking(UserResponse user, String showtimeId, List<String> seats, String movieName, String showtimeTime) {
+	public String createBooking(String customerEmail, long showtimeId, List<String> seats, String movieName, String showtimeTime) {
 		try {
-			log.info("Tạo booking cho userId: {}, showtimeId: {}, seats: {}", user.getId(), showtimeId, seats);
+			log.info("Tạo booking cho : {}, showtimeId: {}, seats: {}", customerEmail, showtimeId, seats);
 
 			Booking booking = new Booking();
-			booking.setUserId(user.getId());
-			booking.setShowtimeId(Long.parseLong(showtimeId));
+			booking.setShowtimeId(showtimeId);
 			booking.setSeats(String.join(",", seats));
 			booking.setStatus("PENDING");
-			booking.setUserEmail(user.getEmail());
+			booking.setUserEmail(customerEmail);
 			booking.setMovieName(movieName);
 			booking.setShowtime(showtimeTime);
 			booking.setCreatedAt(LocalDateTime.now());
@@ -71,9 +70,9 @@ public class BookingService {
 					booking.getUserEmail(),
 					booking.getMovieName(),
 					booking.getShowtime(),
-					booking.getShowtimeId().toString(),
+					booking.getShowtimeId(),
 					Arrays.asList(booking.getSeats().split(",")),
-					fetchUser(booking.getUserId().toString()).getUsername(),
+					booking.getUserEmail(),
 					booking.getCreatedAt().toString()
 			);
 		} catch (Exception e) {
@@ -97,9 +96,9 @@ public class BookingService {
 					booking.getUserEmail(),
 					booking.getMovieName(),
 					booking.getShowtime(),
-					booking.getShowtimeId().toString(),
+					booking.getShowtimeId(),
 					Arrays.asList(booking.getSeats().split(",")),
-					fetchUser(booking.getUserId().toString()).getUsername(),
+					booking.getUserEmail(),
 					booking.getCreatedAt().toString()
 			);
 		} catch (Exception e) {

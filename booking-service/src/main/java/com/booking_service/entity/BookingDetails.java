@@ -6,12 +6,12 @@ public class BookingDetails {
     private String userEmail;
     private String movieName;
     private String showtime;
-    private String showtimeId;
+    private long showtimeId;
     private List<String> seats;
     private String userName;
     private String createdAt;
 
-    public BookingDetails(String userEmail, String movieName, String showtime, String showtimeId, List<String> seats, String userName, String createdAt) {
+    public BookingDetails(String userEmail, String movieName, String showtime, long showtimeId, List<String> seats, String userName, String createdAt) {
         this.userEmail = userEmail;
         this.movieName = movieName;
         this.showtime = showtime;
@@ -28,8 +28,8 @@ public class BookingDetails {
     public void setMovieName(String movieName) { this.movieName = movieName; }
     public String getShowtime() { return showtime; }
     public void setShowtime(String showtime) { this.showtime = showtime; }
-    public String getShowtimeId() { return showtimeId; }
-    public void setShowtimeId(String showtimeId) { this.showtimeId = showtimeId; }
+    public long getShowtimeId() { return showtimeId; }
+    public void setShowtimeId(long showtimeId) { this.showtimeId = showtimeId; }
     public List<String> getSeats() { return seats; }
     public void setSeats(List<String> seats) { this.seats = seats; }
     public String getUserName() { return userName; }
