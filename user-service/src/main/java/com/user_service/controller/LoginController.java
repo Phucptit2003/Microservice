@@ -1,6 +1,7 @@
 package com.user_service.controller;
 
 import com.user_service.entity.Client;
+import com.user_service.entity.UserSignInDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -26,17 +27,16 @@ public class LoginController {
         try {
             // Gửi request tới API đăng nhập
             String url = "http://user-service:9090/api/user/login";
-            Client loginRequest = new Client();
+            UserSignInDTO loginRequest = new UserSignInDTO();
             loginRequest.setUsername(username);
             loginRequest.setPassword(password);
 
             ResponseEntity<String> response = restTemplate.postForEntity(url, loginRequest, String.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {
-                // Lấy token từ response
                 String token = response.getBody();
                 model.addAttribute("token", token);
-                return "index"; // Trả về lại login.html với token
+                return "index";
             } else {
                 model.addAttribute("error", "Invalid username or password");
                 return "index";

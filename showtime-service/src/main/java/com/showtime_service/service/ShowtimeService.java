@@ -50,16 +50,24 @@ public class ShowtimeService {
 	public Boolean doesShowtimeExist(Long id) {
 		return showtimeRepo.existsById(id);
 	}
-	
+
 	private ShowtimeDTO mapToDTO(Showtime showtime) {
-        ShowtimeDTO dto = new ShowtimeDTO();
-        dto.setId(showtime.getId());
-        dto.setMovieId(showtime.getMovieId());
-        dto.setShowTime(showtime.getShowTime());
-        dto.setAvailableSeats(showtime.getAvailableSeats());
-		dto.setCinemaName(showtime.getCinema().getName());
-        return dto;
-    }
+		ShowtimeDTO dto = new ShowtimeDTO();
+		dto.setId(showtime.getId());
+		dto.setMovieId(showtime.getMovieId());
+		dto.setShowTime(showtime.getShowTime());
+		dto.setAvailableSeats(showtime.getAvailableSeats());
+
+		// Kiểm tra null cho cinema
+		if (showtime.getCinema() != null) {
+			dto.setCinemaName(showtime.getCinema().getName());
+		} else {
+			dto.setCinemaName("Unknown Cinema"); // hoặc để null tùy logic bạn muốn
+		}
+
+		return dto;
+	}
+
 	public List<Showtime> getShowtimesByMovieId(Long movieId) {
 		return showtimeRepo.findByMovieId(movieId);
 	}

@@ -5,11 +5,17 @@ import com.booking_service.service.BookingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientException;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
+import java.time.Duration;
 import java.util.List;
 
 @RestController
@@ -22,37 +28,66 @@ public class BookingController {
 	private BookingService bookingService;
 
 	@Autowired
-	private WebClient.Builder webClientBuilder;
+	private WebClient webClient;
+
+	@Configuration
+	public static class WebClientConfig {
+		@Bean
+		@LoadBalanced
+		public WebClient.Builder webClientBuilder() {
+			return WebClient.builder();
+		}
+
+		@Bean
+		public WebClient webClient(WebClient.Builder builder) {
+			return builder.build();
+		}
+	}
+	@GetMapping
+	public List<Booking> getBookingsByShowtimeId(@RequestParam Long showtimeId) {
+		return bookingService.getBookingsByShowtimeId(showtimeId);
+	}
 
 	@PostMapping("/create")
 	public ResponseEntity<?> createBooking(@RequestBody BookingRequest request) {
 		try {
-			log.info("Tạo booking cho userId: {}, showtimeId: {}, seats: {}",
-					request.getUserId(), request.getShowtimeId(), request.getSeats());
+			log.info("Tạo booking cho userId: {}, showtimeId: {}, seats: {}, movie: {}, showtimeTime: {}",
+					request.getUser().getId(), request.getShowtimeId(), request.getSeats(),
+					request.getMovie() != null ? request.getMovie().getTitle() : "null",
+					request.getShowtimeTime());
 
-			Mono<String> lockResponse = webClientBuilder.build()
+			Mono<LockSeatResponse> lockResponse = webClient
 					.post()
-					.uri("http://seat-service/api/seats/lock")
+					.uri("http://seat/api/seats/lock")
 					.bodyValue(new LockSeatRequest(request.getShowtimeId(), request.getSeats()))
 					.retrieve()
-					.bodyToMono(String.class);
+					.bodyToMono(LockSeatResponse.class)
+					.retryWhen(
+							Retry.backoff(3, Duration.ofSeconds(1))
+									.filter(throwable -> throwable instanceof WebClientException)
+									.doBeforeRetry(retrySignal -> log.warn("Retry lần {} do lỗi: {}",
+											retrySignal.totalRetries() + 1, retrySignal.failure().getMessage()))
+					)
+					.doOnError(error -> log.error("Lỗi khi gọi seat service: {}", error.getMessage(), error));
 
-			String lockResult = lockResponse.block();
-			if (!"Seats locked successfully".equals(lockResult)) {
+			LockSeatResponse lockResult = lockResponse.block();
+			if (lockResult == null || lockResult.getBookingId() == null) {
 				log.warn("Khóa ghế thất bại cho showtimeId: {}, seats: {}",
 						request.getShowtimeId(), request.getSeats());
 				return ResponseEntity.badRequest().body(new ErrorResponse("Ghế không khả dụng"));
 			}
 
 			String bookingId = bookingService.createBooking(
-					request.getUserId(),
+					request.getUser(),
 					request.getShowtimeId(),
-					request.getSeats()
+					request.getSeats(),
+					request.getMovie().getTitle(),
+					request.getShowtimeTime()
 			);
 			log.info("Tạo booking thành công, bookingId: {}", bookingId);
 			return ResponseEntity.ok(new BookingResponse(bookingId));
 		} catch (Exception e) {
-			log.error("Lỗi khi tạo booking: {}", e.getMessage());
+			log.error("Lỗi khi tạo booking: {}", e.getMessage(), e);
 			return ResponseEntity.badRequest().body(new ErrorResponse("Lỗi khi tạo booking: " + e.getMessage()));
 		}
 	}
@@ -62,12 +97,19 @@ public class BookingController {
 		try {
 			log.info("Xử lý thanh toán cho bookingId: {}, amount: {}", bookingId, paymentRequest.getAmount());
 
-			Mono<PaymentResponse> paymentResponse = webClientBuilder.build()
+			Mono<PaymentResponse> paymentResponse = webClient
 					.post()
 					.uri("http://payment-service/api/payments/create")
 					.bodyValue(new PaymentServiceRequest(bookingId, paymentRequest.getAmount()))
 					.retrieve()
-					.bodyToMono(PaymentResponse.class);
+					.bodyToMono(PaymentResponse.class)
+					.retryWhen(
+							Retry.backoff(3, Duration.ofSeconds(1))
+									.filter(throwable -> throwable instanceof WebClientException)
+									.doBeforeRetry(retrySignal -> log.warn("Retry lần {} do lỗi: {}",
+											retrySignal.totalRetries() + 1, retrySignal.failure().getMessage()))
+					)
+					.doOnError(error -> log.error("Lỗi khi gọi payment service: {}", error.getMessage(), error));
 
 			PaymentResponse response = paymentResponse.block();
 			if (response == null || response.getSessionId() == null) {
@@ -78,7 +120,7 @@ public class BookingController {
 			log.info("Tạo phiên thanh toán thành công, sessionId: {}", response.getSessionId());
 			return ResponseEntity.ok(new PaymentResponse(response.getSessionId()));
 		} catch (Exception e) {
-			log.error("Lỗi khi xử lý thanh toán: {}", e.getMessage());
+			log.error("Lỗi khi xử lý thanh toán: {}", e.getMessage(), e);
 			return ResponseEntity.badRequest().body(new ErrorResponse("Lỗi khi xử lý thanh toán: " + e.getMessage()));
 		}
 	}
@@ -88,11 +130,18 @@ public class BookingController {
 		try {
 			log.info("Xác nhận booking cho bookingId: {}, sessionId: {}", bookingId, confirmRequest.getSessionId());
 
-			Mono<PaymentStatusResponse> paymentStatus = webClientBuilder.build()
+			Mono<PaymentStatusResponse> paymentStatus = webClient
 					.get()
 					.uri("http://payment-service/api/payments/status/" + confirmRequest.getSessionId())
 					.retrieve()
-					.bodyToMono(PaymentStatusResponse.class);
+					.bodyToMono(PaymentStatusResponse.class)
+					.retryWhen(
+							Retry.backoff(3, Duration.ofSeconds(1))
+									.filter(throwable -> throwable instanceof WebClientException)
+									.doBeforeRetry(retrySignal -> log.warn("Retry lần {} do lỗi: {}",
+											retrySignal.totalRetries() + 1, retrySignal.failure().getMessage()))
+					)
+					.doOnError(error -> log.error("Lỗi khi gọi payment service: {}", error.getMessage(), error));
 
 			PaymentStatusResponse statusResponse = paymentStatus.block();
 			if (statusResponse == null || !"complete".equals(statusResponse.getStatus())) {
@@ -101,9 +150,9 @@ public class BookingController {
 
 				BookingDetails bookingDetails = bookingService.getBookingDetails(bookingId);
 				if (bookingDetails != null) {
-					webClientBuilder.build()
+					webClient
 							.post()
-							.uri("http://seat-service/api/seats/unlock")
+							.uri("http://seat/api/seats/unlock")
 							.bodyValue(new LockSeatRequest(bookingDetails.getShowtimeId(), bookingDetails.getSeats()))
 							.retrieve()
 							.bodyToMono(String.class)
@@ -117,9 +166,9 @@ public class BookingController {
 
 			BookingDetails bookingDetails = bookingService.confirmBooking(bookingId);
 
-			String bookResult = webClientBuilder.build()
+			String bookResult = webClient
 					.post()
-					.uri("http://seat-service/api/seats/book")
+					.uri("http://seat/api/seats/book")
 					.bodyValue(new BookSeatRequest(bookingDetails.getShowtimeId(), bookingDetails.getSeats()))
 					.retrieve()
 					.bodyToMono(String.class)
@@ -131,7 +180,7 @@ public class BookingController {
 				return ResponseEntity.badRequest().body(new ErrorResponse("Đặt ghế thất bại"));
 			}
 
-			String emailResult = webClientBuilder.build()
+			String emailResult = webClient
 					.post()
 					.uri("http://notification-service/api/notifications/send")
 					.bodyValue(new NotificationRequest(
@@ -150,16 +199,16 @@ public class BookingController {
 			}
 
 			log.info("Xác nhận booking thành công cho bookingId: {}", bookingId);
-			return ResponseEntity.ok(bookingDetails); // Trả về BookingDetails
+			return ResponseEntity.ok(bookingDetails);
 		} catch (Exception e) {
-			log.error("Lỗi khi xác nhận booking: {}", e.getMessage());
+			log.error("Lỗi khi xác nhận booking: {}", e.getMessage(), e);
 
 			try {
 				BookingDetails bookingDetails = bookingService.getBookingDetails(bookingId);
 				if (bookingDetails != null) {
-					webClientBuilder.build()
+					webClient
 							.post()
-							.uri("http://seat-service/api/seats/unlock")
+							.uri("http://seat/api/seats/unlock")
 							.bodyValue(new LockSeatRequest(bookingDetails.getShowtimeId(), bookingDetails.getSeats()))
 							.retrieve()
 							.bodyToMono(String.class)
@@ -168,7 +217,7 @@ public class BookingController {
 				}
 				bookingService.cancelBooking(bookingId);
 			} catch (Exception unlockEx) {
-				log.error("Lỗi khi mở khóa ghế: {}", unlockEx.getMessage());
+				log.error("Lỗi khi mở khóa ghế: {}", unlockEx.getMessage(), unlockEx);
 			}
 
 			return ResponseEntity.badRequest().body(new ErrorResponse("Lỗi khi xác nhận booking: " + e.getMessage()));
@@ -181,9 +230,8 @@ public class BookingController {
 			UserResponse user = bookingService.updateUserInfo(userId, request.getName(), request.getEmail());
 			return ResponseEntity.ok(user);
 		} catch (Exception e) {
-			log.error("Lỗi khi cập nhật thông tin user: {}", e.getMessage());
+			log.error("Lỗi khi cập nhật thông tin user: {}", e.getMessage(), e);
 			return ResponseEntity.badRequest().body(new ErrorResponse("Lỗi khi cập nhật thông tin: " + e.getMessage()));
 		}
 	}
 }
-

@@ -24,22 +24,18 @@ public class BookingService {
 	@Autowired
 	private WebClient.Builder webClientBuilder;
 
-	public String createBooking(String userId, String showtimeId, List<String> seats) {
+	public String createBooking(UserResponse user, String showtimeId, List<String> seats, String movieName, String showtimeTime) {
 		try {
-			log.info("Tạo booking cho userId: {}, showtimeId: {}, seats: {}", userId, showtimeId, seats);
-
-			UserResponse user = fetchUser(userId);
-			String movieName = fetchMovieName(showtimeId);
-			String showtime = fetchShowtime(showtimeId);
+			log.info("Tạo booking cho userId: {}, showtimeId: {}, seats: {}", user.getId(), showtimeId, seats);
 
 			Booking booking = new Booking();
-			booking.setUserId(Long.parseLong(userId));
+			booking.setUserId(user.getId());
 			booking.setShowtimeId(Long.parseLong(showtimeId));
 			booking.setSeats(String.join(",", seats));
 			booking.setStatus("PENDING");
 			booking.setUserEmail(user.getEmail());
 			booking.setMovieName(movieName);
-			booking.setShowtime(showtime);
+			booking.setShowtime(showtimeTime);
 			booking.setCreatedAt(LocalDateTime.now());
 
 			booking = bookingRepository.save(booking);
@@ -77,7 +73,7 @@ public class BookingService {
 					booking.getShowtime(),
 					booking.getShowtimeId().toString(),
 					Arrays.asList(booking.getSeats().split(",")),
-					fetchUser(booking.getUserId().toString()).getName(),
+					fetchUser(booking.getUserId().toString()).getUsername(),
 					booking.getCreatedAt().toString()
 			);
 		} catch (Exception e) {
@@ -103,7 +99,7 @@ public class BookingService {
 					booking.getShowtime(),
 					booking.getShowtimeId().toString(),
 					Arrays.asList(booking.getSeats().split(",")),
-					fetchUser(booking.getUserId().toString()).getName(),
+					fetchUser(booking.getUserId().toString()).getUsername(),
 					booking.getCreatedAt().toString()
 			);
 		} catch (Exception e) {
@@ -137,7 +133,7 @@ public class BookingService {
 
 			UserResponse userResponse = webClientBuilder.build()
 					.put()
-					.uri("http://user-service/api/users/" + userId)
+					.uri("http://user-service:9090/api/user/" + userId)
 					.bodyValue(new UpdateUserRequest(name, email))
 					.retrieve()
 					.bodyToMono(UserResponse.class)
@@ -155,7 +151,7 @@ public class BookingService {
 		try {
 			return webClientBuilder.build()
 					.get()
-					.uri("http://user-service/api/users/" + userId)
+					.uri("http://user-service:9090/api/user/" + userId)
 					.retrieve()
 					.bodyToMono(UserResponse.class)
 					.block();
@@ -169,7 +165,7 @@ public class BookingService {
 		try {
 			return webClientBuilder.build()
 					.get()
-					.uri("http://showtime-service/api/showtimes/" + showtimeId)
+					.uri("http://showtime-service:9090/api/showtimes/" + showtimeId)
 					.retrieve()
 					.bodyToMono(ShowtimeResponse.class)
 					.map(ShowtimeResponse::getMovieName)
@@ -194,4 +190,8 @@ public class BookingService {
 			throw new RuntimeException("Lỗi khi lấy thời gian suất chiếu");
 		}
 	}
+	public List<Booking> getBookingsByShowtimeId(Long showtimeId) {
+		return bookingRepository.findByShowtimeId(showtimeId);
+	}
+
 }
