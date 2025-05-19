@@ -169,6 +169,17 @@ services:
     networks:
       - ticket-network
 
+  # Stripe CLI
+  stripe-cli:
+    image: stripe/stripe-cli
+    container_name: stripe-cli
+    command: listen --forward-to payment-service:9090/api/payments/webhook
+    environment:
+      - STRIPE_API_KEY=${STRIPE_API_KEY}
+    networks:
+      - ticket-network
+    depends_on:
+      - payment-service
 
   # MySQL
   mysql:

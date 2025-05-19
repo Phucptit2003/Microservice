@@ -384,12 +384,7 @@
                 }
 
                 const payload = {
-                    user: {
-                        id: userInfo.id,
-                        username: userInfo.username,
-                        role: userInfo.role,
-                        email: userInfo.email
-                    },
+                    user: userInfo.email,
                     showtimeId: selectedShowtime.id,
                     seats: seatNumbersArray,
                     movie: {
