@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
@@ -50,25 +51,37 @@ public class BookingController {
 
 	@PostMapping("/create")
 	public ResponseEntity<?> createBooking(@RequestBody BookingRequest request) {
+		String bookingId = null;
 		try {
 			log.info("Tạo booking cho userId: {}, showtimeId: {}, seats: {}, movie: {}, showtimeTime: {}",
 					request.getCustomerEmail(), request.getShowtimeId(), request.getSeats(),
 					request.getMovie() != null ? request.getMovie().getTitle() : "null",
 					request.getShowtimeTime());
 
+			LockSeatRequest lockRequest = new LockSeatRequest(request.getShowtimeId(), request.getSeats());
+			log.info("Gửi LockSeatRequest: {}", lockRequest);
+
 			Mono<LockSeatResponse> lockResponse = webClient
 					.post()
 					.uri("http://seat/api/seats/lock")
-					.bodyValue(new LockSeatRequest(request.getShowtimeId(), request.getSeats()))
+					.bodyValue(lockRequest)
 					.retrieve()
 					.bodyToMono(LockSeatResponse.class)
 					.retryWhen(
 							Retry.backoff(3, Duration.ofSeconds(1))
-									.filter(throwable -> throwable instanceof WebClientException)
+									.filter(throwable -> {
+										if (throwable instanceof WebClientResponseException ex) {
+											return ex.getStatusCode().is5xxServerError();
+										}
+										return false;
+									})
 									.doBeforeRetry(retrySignal -> log.warn("Retry lần {} do lỗi: {}",
 											retrySignal.totalRetries() + 1, retrySignal.failure().getMessage()))
 					)
-					.doOnError(error -> log.error("Lỗi khi gọi seat service: {}", error.getMessage(), error));
+					.onErrorResume(WebClientResponseException.class, ex -> {
+						log.error("Lỗi từ seat service: {}, Response: {}", ex.getStatusCode(), ex.getResponseBodyAsString());
+						return Mono.error(new RuntimeException("Lỗi khóa ghế: " + ex.getResponseBodyAsString()));
+					});
 
 			LockSeatResponse lockResult = lockResponse.block();
 			if (lockResult == null || lockResult.getBookingId() == null) {
@@ -77,7 +90,7 @@ public class BookingController {
 				return ResponseEntity.badRequest().body(new ErrorResponse("Ghế không khả dụng"));
 			}
 
-			String bookingId = bookingService.createBooking(
+			bookingId = bookingService.createBooking(
 					request.getCustomerEmail(),
 					request.getShowtimeId(),
 					request.getSeats(),
@@ -86,37 +99,66 @@ public class BookingController {
 			);
 			log.info("Tạo booking thành công, bookingId: {}", bookingId);
 
-			// Call payment-service to create payment link
-			// Assume amount, currency, successUrl, cancelUrl, customerEmail are in request
-			var paymentRequestDto = new java.util.HashMap<String, Object>();
-			paymentRequestDto.put("orderId", bookingId);
-			paymentRequestDto.put("amount", request.getAmount());
-			paymentRequestDto.put("currency", request.getCurrency());
-			paymentRequestDto.put("description", "Booking for movie: " + request.getMovie().getTitle());
-			paymentRequestDto.put("successUrl", request.getSuccessUrl());
-			paymentRequestDto.put("cancelUrl", request.getCancelUrl());
-			paymentRequestDto.put("customerEmail", request.getCustomerEmail());
+			PaymentRequestDto paymentRequestDto = PaymentRequestDto.builder()
+					.orderId(bookingId)
+					.amount((int) (request.getAmount() * 100))
+					.currency(request.getCurrency())
+					.description("Booking for movie: " + request.getMovie().getTitle())
+					.successUrl(request.getSuccessUrl())
+					.cancelUrl(request.getCancelUrl())
+					.customerEmail(request.getCustomerEmail())
+					.build();
+			log.info("Gửi paymentRequestDto: {}", paymentRequestDto);
 
-			Mono<java.util.Map> paymentResponseMono = webClient
+			Mono<PaymentResponseDto> paymentResponseMono = webClient
 					.post()
 					.uri("http://payment-service/api/payments/create-checkout-session")
 					.bodyValue(paymentRequestDto)
 					.retrieve()
-					.bodyToMono(java.util.Map.class)
+					.bodyToMono(PaymentResponseDto.class)
 					.retryWhen(
 							Retry.backoff(3, Duration.ofSeconds(1))
-									.filter(throwable -> throwable instanceof WebClientException)
+									.filter(throwable -> {
+										if (throwable instanceof WebClientResponseException ex) {
+											return ex.getStatusCode().is5xxServerError();
+										}
+										return false;
+									})
 									.doBeforeRetry(retrySignal -> log.warn("Retry lần {} do lỗi: {}",
 											retrySignal.totalRetries() + 1, retrySignal.failure().getMessage()))
 					)
-					.doOnError(error -> log.error("Lỗi khi gọi payment service: {}", error.getMessage(), error));
+					.onErrorResume(WebClientResponseException.class, ex -> {
+						log.error("Lỗi từ payment-service: {}, Response: {}", ex.getStatusCode(), ex.getResponseBodyAsString());
+						return Mono.error(new RuntimeException("Lỗi tạo checkout session: " + ex.getResponseBodyAsString()));
+					});
 
-			java.util.Map paymentResponse = paymentResponseMono.block();
-			String paymentLink = paymentResponse != null && paymentResponse.get("checkoutUrl") != null ? paymentResponse.get("checkoutUrl").toString() : null;
+			PaymentResponseDto paymentResponse = paymentResponseMono.block();
+			if (paymentResponse == null || paymentResponse.getCheckoutUrl() == null) {
+				log.warn("Tạo liên kết thanh toán thất bại cho bookingId: {}", bookingId);
+				bookingService.cancelBooking(bookingId);
+				webClient
+						.post()
+						.uri("http://seat/api/seats/unlock")
+						.bodyValue(new LockSeatRequest(request.getShowtimeId(), request.getSeats()))
+						.retrieve()
+						.bodyToMono(String.class)
+						.block();
+				return ResponseEntity.badRequest().body(new ErrorResponse("Tạo liên kết thanh toán thất bại"));
+			}
 
-			return ResponseEntity.ok(new BookingResponse(bookingId, paymentLink));
+			return ResponseEntity.ok(new BookingResponse(bookingId, paymentResponse.getCheckoutUrl()));
 		} catch (Exception e) {
 			log.error("Lỗi khi tạo booking: {}", e.getMessage(), e);
+			if (bookingId != null) {
+				bookingService.cancelBooking(bookingId);
+				webClient
+						.post()
+						.uri("http://seat/api/seats/unlock")
+						.bodyValue(new LockSeatRequest(request.getShowtimeId(), request.getSeats()))
+						.retrieve()
+						.bodyToMono(String.class)
+						.block();
+			}
 			return ResponseEntity.badRequest().body(new ErrorResponse("Lỗi khi tạo booking: " + e.getMessage()));
 		}
 	}
@@ -126,30 +168,82 @@ public class BookingController {
 		try {
 			log.info("Xử lý thanh toán cho bookingId: {}, amount: {}", bookingId, paymentRequest.getAmount());
 
-			Mono<PaymentResponse> paymentResponse = webClient
+			// Lấy thông tin booking
+			BookingDetails bookingDetails = bookingService.getBookingDetails(bookingId);
+			if (bookingDetails == null) {
+				log.warn("Không tìm thấy booking với bookingId: {}", bookingId);
+				return ResponseEntity.badRequest().body(new ErrorResponse("Không tìm thấy booking"));
+			}
+
+			// Tạo PaymentRequestDto
+			PaymentRequestDto paymentRequestDto = PaymentRequestDto.builder()
+					.orderId(bookingId)
+					.amount((int) (paymentRequest.getAmount() * 100))
+					.currency("USD")
+					.description("Booking for movie: " + bookingDetails.getMovieName())
+					.successUrl("http://localhost:8080/invoice.html?session_id={CHECKOUT_SESSION_ID}") // Chuyển hướng thẳng đến invoice.html
+					.cancelUrl("http://localhost:8080/payment/cancel") // Giữ nguyên cancelUrl
+					.customerEmail(bookingDetails.getUserEmail())
+					.build();
+			log.info("Gửi paymentRequestDto: {}", paymentRequestDto);
+
+			// Gửi yêu cầu đến payment-service
+			Mono<PaymentResponseDto> paymentResponseMono = webClient
 					.post()
-					.uri("http://payment-service/api/payments/create")
-					.bodyValue(new PaymentServiceRequest(bookingId, paymentRequest.getAmount()))
+					.uri("http://payment-service/api/payments/create-checkout-session")
+					.bodyValue(paymentRequestDto)
 					.retrieve()
-					.bodyToMono(PaymentResponse.class)
+					.bodyToMono(PaymentResponseDto.class)
 					.retryWhen(
 							Retry.backoff(3, Duration.ofSeconds(1))
-									.filter(throwable -> throwable instanceof WebClientException)
+									.filter(throwable -> {
+										if (throwable instanceof WebClientResponseException ex) {
+											return ex.getStatusCode().is5xxServerError();
+										}
+										return false;
+									})
 									.doBeforeRetry(retrySignal -> log.warn("Retry lần {} do lỗi: {}",
 											retrySignal.totalRetries() + 1, retrySignal.failure().getMessage()))
 					)
-					.doOnError(error -> log.error("Lỗi khi gọi payment service: {}", error.getMessage(), error));
+					.onErrorResume(WebClientResponseException.class, ex -> {
+						log.error("Lỗi từ payment-service: {}, Response: {}", ex.getStatusCode(), ex.getResponseBodyAsString());
+						return Mono.error(new RuntimeException("Lỗi tạo checkout session: " + ex.getResponseBodyAsString()));
+					});
 
-			PaymentResponse response = paymentResponse.block();
-			if (response == null || response.getSessionId() == null) {
+			PaymentResponseDto paymentResponse = paymentResponseMono.block();
+			if (paymentResponse == null || paymentResponse.getCheckoutUrl() == null) {
 				log.warn("Tạo phiên thanh toán thất bại cho bookingId: {}", bookingId);
+				webClient
+						.post()
+						.uri("http://seat/api/seats/unlock")
+						.bodyValue(new LockSeatRequest(bookingDetails.getShowtimeId(), bookingDetails.getSeats()))
+						.retrieve()
+						.bodyToMono(String.class)
+						.block();
+				bookingService.cancelBooking(bookingId);
 				return ResponseEntity.badRequest().body(new ErrorResponse("Tạo phiên thanh toán thất bại"));
 			}
 
-			log.info("Tạo phiên thanh toán thành công, sessionId: {}", response.getSessionId());
-			return ResponseEntity.ok(new PaymentResponse(response.getSessionId()));
+			log.info("Tạo phiên thanh toán thành công, sessionId: {}", paymentResponse.getCheckoutUrl());
+			return ResponseEntity.ok(new PaymentResponse(paymentResponse.getCheckoutUrl()));
 		} catch (Exception e) {
 			log.error("Lỗi khi xử lý thanh toán: {}", e.getMessage(), e);
+			try {
+				BookingDetails bookingDetails = bookingService.getBookingDetails(bookingId);
+				if (bookingDetails != null) {
+					webClient
+							.post()
+							.uri("http://seat/api/seats/unlock")
+							.bodyValue(new LockSeatRequest(bookingDetails.getShowtimeId(), bookingDetails.getSeats()))
+							.retrieve()
+							.bodyToMono(String.class)
+							.block();
+					log.info("Mở khóa ghế thành công do lỗi thanh toán cho bookingId: {}", bookingId);
+				}
+				bookingService.cancelBooking(bookingId);
+			} catch (Exception unlockEx) {
+				log.error("Lỗi khi mở khóa ghế: {}", unlockEx.getMessage(), unlockEx);
+			}
 			return ResponseEntity.badRequest().body(new ErrorResponse("Lỗi khi xử lý thanh toán: " + e.getMessage()));
 		}
 	}

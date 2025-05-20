@@ -1,6 +1,10 @@
 package com.booking_service.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 public class BookingRequest {
@@ -77,7 +81,7 @@ public class BookingRequest {
         this.showtimeTime = showtimeTime;
     }
 
-    public double getAmount() { return amount; }
+    public @NotNull(message = "Amount is required") @Positive(message = "Amount must be positive") double getAmount() { return amount; }
     public void setAmount(double amount) { this.amount = amount; }
     public String getCurrency() { return currency; }
     public void setCurrency(String currency) { this.currency = currency; }

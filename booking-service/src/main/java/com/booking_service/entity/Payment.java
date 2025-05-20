@@ -1,4 +1,4 @@
-package com.example.paymentservice.model;
+package com.booking_service.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -27,7 +27,7 @@ public class Payment {
     private String orderId;
 
     @Column(nullable = false)
-    private double amount;
+    private BigDecimal amount;
 
     @Column(nullable = false)
     private String currency;

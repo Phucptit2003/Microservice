@@ -10,10 +10,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/payments")
@@ -25,7 +28,18 @@ public class PaymentController {
 
     @PostMapping("/create-checkout-session")
     public ResponseEntity<PaymentResponseDto> createCheckoutSession(
-            @Valid @RequestBody PaymentRequestDto paymentRequestDto) {
+            @Valid @RequestBody PaymentRequestDto paymentRequestDto, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            log.error("Validation errors for PaymentRequestDto: {}", bindingResult.getAllErrors());
+            String errorMessage = bindingResult.getAllErrors().stream()
+                    .map(ObjectError::getDefaultMessage)
+                    .collect(Collectors.joining("; "));
+            return ResponseEntity.badRequest().body(
+                    PaymentResponseDto.builder()
+                            .message("Validation failed: " + errorMessage)
+                            .build()
+            );
+        }
         log.info("Creating checkout session for order: {}", paymentRequestDto.getOrderId());
         PaymentResponseDto response = paymentService.createCheckoutSession(paymentRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

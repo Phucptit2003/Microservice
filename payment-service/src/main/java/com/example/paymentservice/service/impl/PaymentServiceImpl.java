@@ -60,7 +60,7 @@ public class PaymentServiceImpl implements PaymentService {
             log.info("User verification successful for email: {}", paymentRequestDto.getCustomerEmail());
             
             // Convert amount to cents (Stripe uses the smallest currency unit)
-            long amountInCents = paymentRequestDto.getAmount().multiply(new BigDecimal(100)).longValue();
+            long amountInCents = (long) paymentRequestDto.getAmount();
             
             // Build line items for the checkout session
             SessionCreateParams.LineItem lineItem = SessionCreateParams.LineItem.builder()
@@ -183,7 +183,7 @@ public class PaymentServiceImpl implements PaymentService {
                         .customerEmail(session.getCustomerEmail())
                         .orderId(payment.getOrderId())
                         .paymentId(payment.getPaymentId())
-                        .amount(payment.getAmount())
+                        .amount(BigDecimal.valueOf(payment.getAmount()))
                         .currency(payment.getCurrency())
                         .description(payment.getDescription())
                         .paymentDate(payment.getUpdatedAt())

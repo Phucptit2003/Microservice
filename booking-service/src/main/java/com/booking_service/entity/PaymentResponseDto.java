@@ -1,6 +1,5 @@
-package com.example.paymentservice.dto;
+package com.booking_service.entity;
 
-import com.example.paymentservice.model.Payment.PaymentStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,14 +13,14 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class PaymentResponseDto {
-    
+
     private String paymentId;
     private String orderId;
-    private double amount;
+    private BigDecimal amount;
     private String currency;
-    private PaymentStatus status;
+    private Payment.PaymentStatus status;
     private String checkoutUrl;
     private String sessionId;
     private String message;
     private LocalDateTime createdAt;
-} 
+}
