@@ -28,7 +28,7 @@
 - Tích hợp với các hệ thống bên ngoài (nếu có).
 
 ## Sơ Đồ Hệ Thống
-- Tham khảo sơ đồ kiến trúc tổng thể tại: [asset/system_diagram.jpeg](asset/system_diagram.jpeg)
+- Tham khảo sơ đồ kiến trúc tổng thể tại: ![architecture](./asset/system_diagram.jpeg)
 
 ## Khả Năng Mở Rộng & Chịu Lỗi
 - Mỗi dịch vụ có thể mở rộng độc lập (scale out theo nhu cầu).
