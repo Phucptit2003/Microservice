@@ -1,0 +1,341 @@
+openapi: 3.0.0
+info:
+  title: Movie Service API
+  description: API cho quản lý thông tin phim
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8082/api
+    description: Local development server
+
+paths:
+  /movies:
+    get:
+      summary: Lấy danh sách phim
+      tags:
+        - Movies
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: sort
+          in: query
+          schema:
+            type: string
+            default: releaseDate,desc
+      responses:
+        '200':
+          description: Danh sách phim
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoviePage'
+
+    post:
+      summary: Thêm phim mới
+      tags:
+        - Movies
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MovieRequest'
+      responses:
+        '201':
+          description: Tạo phim thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieResponse'
+        '400':
+          description: Dữ liệu không hợp lệ
+        '401':
+          description: Chưa xác thực
+        '403':
+          description: Không có quyền truy cập
+
+  /movies/{id}:
+    get:
+      summary: Lấy thông tin chi tiết phim
+      tags:
+        - Movies
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Thông tin phim
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieResponse'
+        '404':
+          description: Không tìm thấy phim
+
+    put:
+      summary: Cập nhật thông tin phim
+      tags:
+        - Movies
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MovieRequest'
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieResponse'
+        '400':
+          description: Dữ liệu không hợp lệ
+        '401':
+          description: Chưa xác thực
+        '403':
+          description: Không có quyền truy cập
+        '404':
+          description: Không tìm thấy phim
+
+    delete:
+      summary: Xóa phim
+      tags:
+        - Movies
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Xóa thành công
+        '401':
+          description: Chưa xác thực
+        '403':
+          description: Không có quyền truy cập
+        '404':
+          description: Không tìm thấy phim
+
+  /movies/{id}/ratings:
+    post:
+      summary: Đánh giá phim
+      tags:
+        - Ratings
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingRequest'
+      responses:
+        '201':
+          description: Đánh giá thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatingResponse'
+        '400':
+          description: Dữ liệu không hợp lệ
+        '401':
+          description: Chưa xác thực
+        '404':
+          description: Không tìm thấy phim
+
+    get:
+      summary: Lấy danh sách đánh giá của phim
+      tags:
+        - Ratings
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Danh sách đánh giá
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatingPage'
+        '404':
+          description: Không tìm thấy phim
+
+components:
+  schemas:
+    MovieRequest:
+      type: object
+      required:
+        - title
+        - description
+        - duration
+        - releaseDate
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        duration:
+          type: integer
+          description: Thời lượng phim (phút)
+        releaseDate:
+          type: string
+          format: date
+        genre:
+          type: string
+        director:
+          type: string
+        cast:
+          type: array
+          items:
+            type: string
+        posterUrl:
+          type: string
+        trailerUrl:
+          type: string
+
+    MovieResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        duration:
+          type: integer
+        releaseDate:
+          type: string
+          format: date
+        genre:
+          type: string
+        director:
+          type: string
+        cast:
+          type: array
+          items:
+            type: string
+        posterUrl:
+          type: string
+        trailerUrl:
+          type: string
+        rating:
+          type: number
+          format: float
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    MoviePage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/MovieResponse'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        size:
+          type: integer
+        number:
+          type: integer
+
+    RatingRequest:
+      type: object
+      required:
+        - rating
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+
+    RatingResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        movieId:
+          type: integer
+        rating:
+          type: integer
+        comment:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    RatingPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/RatingResponse'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        size:
+          type: integer
+        number:
+          type: integer
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT 

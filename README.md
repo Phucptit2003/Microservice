@@ -154,8 +154,12 @@ Hệ thống tuân theo kiến trúc microservice, với các thành phần sau:
 
 5. Khởi động tất cả dịch vụ:
    ```bash
-   docker-compose up -d
+   docker-compose up --build
    ```
+   
+    ```bash
+    http-server
+    ```
 
 6. Kiểm tra các dịch vụ đang chạy:
    - Eureka Server: http://localhost:8761
@@ -172,12 +176,4 @@ Hệ thống tuân theo kiến trúc microservice, với các thành phần sau:
 - Payment Service: 9090
 - Notification Service: 9090
 
-## Đóng Góp
-1. Fork repository
-2. Tạo nhánh tính năng (`git checkout -b feature/tinh-nang-moi`)
-3. Commit thay đổi (`git commit -m 'Thêm tính năng mới'`)
-4. Push lên nhánh (`git push origin feature/tinh-nang-moi`)
-5. Tạo Pull Request
 
-## Giấy Phép
-Giấy phép MIT
