@@ -49,3 +49,14 @@
 #        core-size: 4
 #        max-size: 8
 #        queue-capacity: 100
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    prometheus:
+      enabled: true
+  server:
+    port: 8080

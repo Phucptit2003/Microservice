@@ -29,20 +29,29 @@ public class PaymentController {
     @PostMapping("/create-checkout-session")
     public ResponseEntity<PaymentResponseDto> createCheckoutSession(
             @Valid @RequestBody PaymentRequestDto paymentRequestDto, BindingResult bindingResult) {
+        log.info("Entered createCheckoutSession with orderId: {}", paymentRequestDto.getOrderId());
+
         if (bindingResult.hasErrors()) {
             log.error("Validation errors for PaymentRequestDto: {}", bindingResult.getAllErrors());
             String errorMessage = bindingResult.getAllErrors().stream()
                     .map(ObjectError::getDefaultMessage)
                     .collect(Collectors.joining("; "));
+            log.warn("Returning validation failure for orderId: {}: {}", paymentRequestDto.getOrderId(), errorMessage);
             return ResponseEntity.badRequest().body(
                     PaymentResponseDto.builder()
                             .message("Validation failed: " + errorMessage)
                             .build()
             );
         }
-        log.info("Creating checkout session for order: {}", paymentRequestDto.getOrderId());
-        PaymentResponseDto response = paymentService.createCheckoutSession(paymentRequestDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        try {
+            log.info("Creating checkout session for order: {}", paymentRequestDto.getOrderId());
+            PaymentResponseDto response = paymentService.createCheckoutSession(paymentRequestDto);
+            log.info("Successfully created checkout session for order: {}", paymentRequestDto.getOrderId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e) {
+            log.error("Exception while creating checkout session for order: {}", paymentRequestDto.getOrderId(), e);
+            throw e;
+        }
     }
 
     @GetMapping("/session/{sessionId}")
