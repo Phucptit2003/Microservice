@@ -3,6 +3,61 @@
 ## Tổng Quan
 Hệ thống `movie_ticket_booking` là một ứng dụng microservice cho phép đặt vé xem phim trực tuyến. Hệ thống cho phép người dùng duyệt phim, chọn suất chiếu, đặt chỗ ngồi, thanh toán và nhận thông báo. Hệ thống được xây dựng bằng **Spring Boot**, **Docker** và **Spring Cloud**, với **Eureka Server** để khám phá dịch vụ và **API Gateway** để định tuyến yêu cầu. Bảo mật được thực thi bằng **JWT**.
 
+## Cấu Trúc Dự Án
+```
+microservices-assignment-starter/
+├── README.md                       # Tệp hướng dẫn này
+├── .env.example                    # Biến môi trường mẫu
+├── docker-compose.yml              # Cấu hình Docker cho tất cả dịch vụ
+├── docs/                           # Thư mục tài liệu
+│   ├── architecture.md             # Mô tả thiết kế hệ thống
+│   ├── analysis-and-design.md      # Tài liệu phân tích và thiết kế
+│   ├── asset/                      # Lưu trữ hình ảnh, sơ đồ và tài liệu trực quan
+│   └── api-specs/                  # Đặc tả API theo OpenAPI (YAML)
+│       ├── user-service.yaml
+│       ├── movie-service.yaml
+│       ├── showtime-service.yaml
+│       ├── seat-service.yaml
+│       ├── booking-service.yaml
+│       ├── payment-service.yaml
+│       └── notification-service.yaml
+├── scripts/                        # Script tiện ích và triển khai
+│   └── init.sh
+├── services/                       # Các microservice của ứng dụng
+│   ├── user-service/
+│   │   ├── Dockerfile
+│   │   ├── src/
+│   │   └── readme.md
+│   ├── movie-service/
+│   │   ├── Dockerfile
+│   │   ├── src/
+│   │   └── readme.md
+│   ├── showtime-service/
+│   │   ├── Dockerfile
+│   │   ├── src/
+│   │   └── readme.md
+│   ├── seat-service/
+│   │   ├── Dockerfile
+│   │   ├── src/
+│   │   └── readme.md
+│   ├── booking-service/
+│   │   ├── Dockerfile
+│   │   ├── src/
+│   │   └── readme.md
+│   ├── payment-service/
+│   │   ├── Dockerfile
+│   │   ├── src/
+│   │   └── readme.md
+│   └── notification-service/
+│       ├── Dockerfile
+│       ├── src/
+│       └── readme.md
+└── gateway/                        # API Gateway / reverse proxy
+    ├── Dockerfile
+    └── src/
+```
+
+
 ## Tính Năng
 - Đăng ký và xác thực người dùng
 - Duyệt phim và suất chiếu theo rạp
@@ -109,67 +164,13 @@ Hệ thống tuân theo kiến trúc microservice, với các thành phần sau:
 ### Cổng Dịch Vụ
 - Eureka Server: 8761
 - API Gateway: 8080
-- User Service: 8081
-- Movie Service: 8082
-- Showtime Service: 8083
-- Seat Service: 8084
-- Booking Service: 8085
-- Payment Service: 8086
-- Notification Service: 8087
-
-## Cấu Trúc Dự Án
-```
-microservices-assignment-starter/
-├── README.md                       # Tệp hướng dẫn này
-├── .env.example                    # Biến môi trường mẫu
-├── docker-compose.yml              # Cấu hình Docker cho tất cả dịch vụ
-├── docs/                           # Thư mục tài liệu
-│   ├── architecture.md             # Mô tả thiết kế hệ thống
-│   ├── analysis-and-design.md      # Tài liệu phân tích và thiết kế
-│   ├── asset/                      # Lưu trữ hình ảnh, sơ đồ và tài liệu trực quan
-│   └── api-specs/                  # Đặc tả API theo OpenAPI (YAML)
-│       ├── user-service.yaml
-│       ├── movie-service.yaml
-│       ├── showtime-service.yaml
-│       ├── seat-service.yaml
-│       ├── booking-service.yaml
-│       ├── payment-service.yaml
-│       └── notification-service.yaml
-├── scripts/                        # Script tiện ích và triển khai
-│   └── init.sh
-├── services/                       # Các microservice của ứng dụng
-│   ├── user-service/
-│   │   ├── Dockerfile
-│   │   ├── src/
-│   │   └── readme.md
-│   ├── movie-service/
-│   │   ├── Dockerfile
-│   │   ├── src/
-│   │   └── readme.md
-│   ├── showtime-service/
-│   │   ├── Dockerfile
-│   │   ├── src/
-│   │   └── readme.md
-│   ├── seat-service/
-│   │   ├── Dockerfile
-│   │   ├── src/
-│   │   └── readme.md
-│   ├── booking-service/
-│   │   ├── Dockerfile
-│   │   ├── src/
-│   │   └── readme.md
-│   ├── payment-service/
-│   │   ├── Dockerfile
-│   │   ├── src/
-│   │   └── readme.md
-│   └── notification-service/
-│       ├── Dockerfile
-│       ├── src/
-│       └── readme.md
-└── gateway/                        # API Gateway / reverse proxy
-    ├── Dockerfile
-    └── src/
-```
+- User Service: 9090
+- Movie Service: 9090
+- Showtime Service: 9090
+- Seat Service: 9090
+- Booking Service: 9090
+- Payment Service: 9090
+- Notification Service: 9090
 
 ## Đóng Góp
 1. Fork repository
