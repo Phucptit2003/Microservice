@@ -1,11 +1,9 @@
 package com.example.paymentservice.service.impl;
 
 import com.example.paymentservice.client.UserClient;
-import com.example.paymentservice.client.NotificationClient;
 import com.example.paymentservice.dto.PaymentRequestDto;
 import com.example.paymentservice.dto.PaymentResponseDto;
 import com.example.paymentservice.dto.UserExistenceDto;
-import com.example.paymentservice.dto.PaymentNotificationDto;
 import com.example.paymentservice.exception.PaymentException;
 import com.example.paymentservice.model.Payment;
 import com.example.paymentservice.model.Payment.PaymentStatus;
@@ -25,6 +23,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.example.paymentservice.service.PaymentNotificationSender;
+import com.example.paymentservice.dto.PaymentNotificationDto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -39,10 +40,12 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final UserClient userClient;
-    private final NotificationClient notificationClient;
     
     @Value("${stripe.webhook.secret}")
     private String webhookSecret;
+
+    @Autowired
+    private PaymentNotificationSender paymentNotificationSender;
 
     @Override
     public PaymentResponseDto createCheckoutSession(PaymentRequestDto paymentRequestDto) {
@@ -189,12 +192,7 @@ public class PaymentServiceImpl implements PaymentService {
                         .paymentDate(payment.getUpdatedAt())
                         .paymentMethod(payment.getPaymentMethod())
                         .build();
-                    try {
-                        notificationClient.sendPaymentSuccessNotification(notificationDto);
-                        log.info("Payment notification sent for payment: {}", payment.getPaymentId());
-                    } catch (Exception e) {
-                        log.error("Failed to send payment notification: {}", e.getMessage());
-                    }
+                    paymentNotificationSender.sendPaymentNotification(notificationDto);
                 } else {
                     log.warn("Payment not marked as paid or session not complete for session: {}", session.getId());
                 }
