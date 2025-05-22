@@ -27,8 +27,54 @@
 - Các dịch vụ lưu trữ dữ liệu riêng biệt (PostgreSQL).
 - Tích hợp với các hệ thống bên ngoài (nếu có).
 
-## Sơ Đồ Hệ Thống
-- Tham khảo sơ đồ kiến trúc tổng thể tại: ![architecture](./asset/system_diagram.jpeg)
+## Sơ Đồ Hệ Thống (Cập nhật)
+
+```
++---------------------+       +---------------------+       +-----------------------+
+|       Client        |<----->|     API Gateway     |<----->|     Eureka Server     |
++---------------------+       +----------^----------+       +-----------------------+
+                              (Load Balancing, Auth)
+                                         |
+          +------------------------------+------------------------------+
+          |                              |                              |
+          v                              v                              v
++---------------------+       +---------------------+       +---------------------+
+|   user-service      |       |   movie-service     |       |  showtime-service   |
+| (MySQL: user_db)    |       | (MySQL: movie_db)   |       | (MySQL: showtime_db)|
++---------------------+       +---------------------+       +----------^----------+
+                                                                       |
+                                                                       | (Async Event)
+                                                                       v
++----------------------+       +---------------------+       +-----------------------+
+| seat-service         |<----->| booking-service     |       |  notification-service |
+| (MySQL: seat_db)     |       | (MySQL: booking_db) |       | (Consumes RabbitMQ)   |
++----------------------+       +---------------------+       +-----------------------+
+          ^                                                            ^
+          |                                                            |
+          | (Update seat)                                             | (Payment Success Event)
+          +------------------------------------------------------------+
+                                         |
+                                         v
+                               +-------------------+
+                               | payment-service   |
+                               | (MySQL: payment_db)|
+                               +-------------------+
+                                         |
+                                         v
+                               +-------------------+
+                               |   RabbitMQ Broker |
+                               +-------------------+
+                                         |
+                                         v
+                               +-------------------+
+                               |   Prometheus      |
+                               +-------------------+
+                                         |
+                                         v
+                               +-------------------+
+                               |   Grafana         |
+                               +-------------------+
+```
 
 ## Khả Năng Mở Rộng & Chịu Lỗi
 - Mỗi dịch vụ có thể mở rộng độc lập (scale out theo nhu cầu).
@@ -44,33 +90,6 @@
 - **Service Discovery**: Eureka
 - **API Gateway**: Spring Cloud Gateway
 - **Security**: JWT, Spring Security
+- **Messaging**: RabbitMQ
+- **Monitoring**: Prometheus, Grafana
 
-## Luồng Xử Lý Chính
-
-### Đặt Vé
-1. Client gửi yêu cầu qua API Gateway
-2. API Gateway xác thực JWT
-3. Booking Service nhận yêu cầu
-4. Kiểm tra ghế với Seat Service
-5. Tạo đơn đặt vé
-6. Xử lý thanh toán qua Payment Service
-7. Gửi thông báo qua Notification Service
-
-### Quản Lý Phim
-1. Admin đăng nhập qua User Service
-2. Thêm/sửa thông tin phim trong Movie Service
-3. Cập nhật lịch chiếu trong Showtime Service
-4. Notification Service gửi thông báo cập nhật
-
-## Bảo Mật
-- JWT cho xác thực
-- HTTPS cho truyền tải dữ liệu
-- Mã hóa mật khẩu
-- Phân quyền chi tiết
-- Rate limiting tại API Gateway
-
-## Khả Năng Mở Rộng
-- Thiết kế cho phép thêm service mới dễ dàng
-- Có thể scale từng service độc lập
-- Sử dụng container cho triển khai linh hoạt
-- Load balancing tự động 

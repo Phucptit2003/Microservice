@@ -1,62 +1,14 @@
 # Hệ Thống Đặt Vé Xem Phim
 
+## Thành viên nhóm
+
+| Họ và tên       | MSSV                       |               
+|-----------------|----------------------------|
+| Lê Đình Phúc    | B21DCCN593                 |  
+| Đồng Hoàng Minh | B21DCCN522                 |  
+
 ## Tổng Quan
 Hệ thống `movie_ticket_booking` là một ứng dụng microservice cho phép đặt vé xem phim trực tuyến. Hệ thống cho phép người dùng duyệt phim, chọn suất chiếu, đặt chỗ ngồi, thanh toán và nhận thông báo. Hệ thống được xây dựng bằng **Spring Boot**, **Docker** và **Spring Cloud**, với **Eureka Server** để khám phá dịch vụ và **API Gateway** để định tuyến yêu cầu. Bảo mật được thực thi bằng **JWT**.
-
-## Cấu Trúc Dự Án
-```
-microservices-assignment-starter/
-├── README.md                       # Tệp hướng dẫn này
-├── .env.example                    # Biến môi trường mẫu
-├── docker-compose.yml              # Cấu hình Docker cho tất cả dịch vụ
-├── docs/                           # Thư mục tài liệu
-│   ├── architecture.md             # Mô tả thiết kế hệ thống
-│   ├── analysis-and-design.md      # Tài liệu phân tích và thiết kế
-│   ├── asset/                      # Lưu trữ hình ảnh, sơ đồ và tài liệu trực quan
-│   └── api-specs/                  # Đặc tả API theo OpenAPI (YAML)
-│       ├── user-service.yaml
-│       ├── movie-service.yaml
-│       ├── showtime-service.yaml
-│       ├── seat-service.yaml
-│       ├── booking-service.yaml
-│       ├── payment-service.yaml
-│       └── notification-service.yaml
-├── scripts/                        # Script tiện ích và triển khai
-│   └── init.sh
-├── services/                       # Các microservice của ứng dụng
-│   ├── user-service/
-│   │   ├── Dockerfile
-│   │   ├── src/
-│   │   └── readme.md
-│   ├── movie-service/
-│   │   ├── Dockerfile
-│   │   ├── src/
-│   │   └── readme.md
-│   ├── showtime-service/
-│   │   ├── Dockerfile
-│   │   ├── src/
-│   │   └── readme.md
-│   ├── seat-service/
-│   │   ├── Dockerfile
-│   │   ├── src/
-│   │   └── readme.md
-│   ├── booking-service/
-│   │   ├── Dockerfile
-│   │   ├── src/
-│   │   └── readme.md
-│   ├── payment-service/
-│   │   ├── Dockerfile
-│   │   ├── src/
-│   │   └── readme.md
-│   └── notification-service/
-│       ├── Dockerfile
-│       ├── src/
-│       └── readme.md
-└── gateway/                        # API Gateway / reverse proxy
-    ├── Dockerfile
-    └── src/
-```
-
 
 ## Tính Năng
 - Đăng ký và xác thực người dùng
@@ -154,12 +106,8 @@ Hệ thống tuân theo kiến trúc microservice, với các thành phần sau:
 
 5. Khởi động tất cả dịch vụ:
    ```bash
-   docker-compose up --build
+   docker-compose up -d
    ```
-   
-    ```bash
-    http-server
-    ```
 
 6. Kiểm tra các dịch vụ đang chạy:
    - Eureka Server: http://localhost:8761
@@ -175,5 +123,114 @@ Hệ thống tuân theo kiến trúc microservice, với các thành phần sau:
 - Booking Service: 9090
 - Payment Service: 9090
 - Notification Service: 9090
+
+## Cấu Trúc Dự Án
+```
+microservices-assignment-starter/
+├── README.md                 
+├── prometheus.yml
+├── .env.example                   
+├── docker-compose.yml            
+├── docs/                           
+│   ├── architecture.md             
+│   ├── analysis-and-design.md     
+│   ├── asset/                     
+│   └── api-specs/                  
+│       ├── user-service.yaml
+│       ├── movie-service.yaml
+│       ├── showtime-service.yaml
+│       ├── seat-service.yaml
+│       ├── booking-service.yaml
+│       ├── payment-service.yaml
+│       └── notification-service.yaml
+├── scripts/                        
+│   └── init.sh
+├── services/                      
+│   ├── user-service/
+│   │   ├── Dockerfile
+│   │   ├── src/
+│   │   └── readme.md
+│   ├── movie-service/
+│   │   ├── Dockerfile
+│   │   ├── src/
+│   │   └── readme.md
+│   ├── showtime-service/
+│   │   ├── Dockerfile
+│   │   ├── src/
+│   │   └── readme.md
+│   ├── seat-service/
+│   │   ├── Dockerfile
+│   │   ├── src/
+│   │   └── readme.md
+│   ├── booking-service/
+│   │   ├── Dockerfile
+│   │   ├── src/
+│   │   └── readme.md
+│   ├── payment-service/
+│   │   ├── Dockerfile
+│   │   ├── src/
+│   │   └── readme.md
+│   └── notification-service/
+│       ├── Dockerfile
+│       ├── src/
+│       └── readme.md
+└── gateway/                        
+    ├── Dockerfile
+    └── src/
+```
+
+## Công Nghệ Sử Dụng
+
+- **Spring Boot**: Framework phát triển ứng dụng Java microservice
+- **Spring Cloud**: Hỗ trợ các pattern microservice (service discovery, config, v.v.)
+- **Spring Cloud Gateway**: API Gateway định tuyến và bảo mật
+- **Eureka Server**: Service Discovery
+- **Docker & Docker Compose**: Đóng gói, triển khai và quản lý container
+- **MySQL**: Cơ sở dữ liệu cho từng service
+- **Prometheus**: Thu thập và giám sát metrics hệ thống
+- **Grafana**: Hiển thị dashboard giám sát realtime
+- **JWT (JSON Web Token)**: Xác thực và phân quyền
+- **Feign Client**: Giao tiếp REST giữa các service
+- **Spring Security**: Bảo mật ứng dụng
+- **RabbitMQ**: Message broker cho giao tiếp bất đồng bộ giữa các service.
+
+
+### Sử dụng RabbitMQ cho Notification
+
+- **RabbitMQ** được sử dụng để truyền thông điệp bất đồng bộ giữa payment-service và notification-service.
+- Khi thanh toán thành công, payment-service gửi message vào queue `payment-notification-queue` trên RabbitMQ.
+- notification-service lắng nghe queue này và gửi email thông báo cho khách hàng.
+- Để kiểm tra, có thể truy cập RabbitMQ Management UI tại [http://localhost:15672](http://localhost:15672) (user/pass: guest/guest).
+
+## Luồng Xử Lý Chính
+
+### Đặt Vé
+1. Client gửi yêu cầu qua API Gateway
+2. API Gateway xác thực JWT
+3. Booking Service nhận yêu cầu
+4. Kiểm tra ghế với Seat Service
+5. Tạo đơn đặt vé
+6. Xử lý thanh toán qua Payment Service
+7. Gửi thông báo qua Notification Service
+
+### Quản Lý Phim
+1. Admin đăng nhập qua User Service
+2. Thêm/sửa thông tin phim trong Movie Service
+3. Cập nhật lịch chiếu trong Showtime Service
+4. Notification Service gửi thông báo cập nhật
+
+## Bảo Mật
+- JWT cho xác thực
+- HTTPS cho truyền tải dữ liệu
+- Mã hóa mật khẩu
+- Phân quyền chi tiết
+- Rate limiting tại API Gateway
+
+## Khả Năng Mở Rộng
+- Thiết kế cho phép thêm service mới dễ dàng
+- Có thể scale từng service độc lập
+- Sử dụng container cho triển khai linh hoạt
+- Load balancing tự động 
+
 
 
